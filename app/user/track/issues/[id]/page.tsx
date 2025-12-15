@@ -180,7 +180,7 @@ export default function IssueDetail({ params }: { params: { id: string } }) {
           <div className="shadow-lg p-7 dark:text-white  hover:shadow-xl transition duration-200 border-neutral-200 border rounded-xl mt-5 ">
             {!ailoader && (
               <div>
-                {/* <h1 className="text-2xl mb-2 inline-block text-transparent bg-clip-text  bg-linear-to-r from-black via-red-600 to-neutral-700 text-clip font-semibold  ">
+                {/* <h1 className="text-2xl  mb-2 inline-block text-transparent bg-clip-text  bg-linear-to-r from-black via-red-600 to-neutral-700 text-clip font-semibold  ">
                   AI's Take
                 </h1> */}
                 <h2 className="text-3xl font-medium my-6">
