@@ -1,4 +1,5 @@
 export interface AIStatsIssue {
+  id?: number;
   summary?: string;
   difficulty?: string;
   labels?: string[];

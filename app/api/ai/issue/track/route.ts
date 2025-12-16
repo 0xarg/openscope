@@ -11,6 +11,15 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = parseInt(session?.user.id);
 
+  if (!issueId) {
+    return NextResponse.json(
+      {
+        message: "Valid params are missing",
+      },
+      { status: 500 }
+    );
+  }
+
   try {
     const issue = await prisma.issue.findFirst({
       where: {
@@ -32,11 +41,11 @@ export async function POST(req: NextRequest) {
     const userExists = !!(await prisma.userIssue.findFirst({
       where: {
         userId,
-        issueId,
+        issueId: issue.id,
       },
     }));
 
-    console.log(userExists);
+    // console.log(userExists);
 
     if (userExists) {
       return NextResponse.json(

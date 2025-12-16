@@ -153,12 +153,9 @@ export default function IssueDetail({
                     onClick={async () => {
                       setTrackLoader(true);
                       await axios
-                        .post(
-                          `/api/ai/issue/track?number=${issue.number}?name=${issue.name}`,
-                          {
-                            issue,
-                          }
-                        )
+                        .post(`/api/ai/issue/track?id=${aiStats?.id}`, {
+                          issue,
+                        })
                         .then((res) => {
                           if (res.status === 200) {
                             toast("Issue added track list!");
