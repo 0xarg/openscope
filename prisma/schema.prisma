@@ -18,11 +18,13 @@ model User {
   email         String?      @unique
   emailVerified DateTime?
   bio           String?
+  skills        String[]
   image         String?
   repos         Repository[] @relation("UserRepos")
   issues        UserIssue[]
-  accounts      Account[]
-  sessions      Session[]
+
+  accounts Account[]
+  sessions Session[]
 }
 
 model Account {
