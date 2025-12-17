@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,8 @@ import axios from "axios";
 import Navbar from "@/app/components/Navbar";
 import { toast } from "sonner";
 import CustomSpinner from "@/app/components/CustomSpinner";
+import { safeParseAI } from "@/lib/utils/parseAIRes";
+import { AIStatsIssue } from "@/types/ai";
 
 export interface Issue {
   id: number;
@@ -58,6 +60,8 @@ const Issues = ({ params }: { params: { name: string } }) => {
   const [error, setError] = useState(false);
   const [refresh, setRefresh] = useState(false);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [aiStats, setAIStats] = useState<AIStatsIssue>();
+  const [showAI, setShowAI] = useState<Boolean>(false);
 
   useEffect(() => {
     setLoading(true);
@@ -106,6 +110,35 @@ const Issues = ({ params }: { params: { name: string } }) => {
       )
     ),
   ];
+
+  const aiTake = useCallback(async () => {
+    await axios
+      .post("/api/ai/issue/stats", {
+        issue: issues,
+      })
+      .then((res) => {
+        if (res.status === 200) {
+          console.log(res.data);
+          const data = safeParseAI(res.data.issue.content);
+          setAIStats(data);
+          setShowAI(true);
+          toast("AI Response Fetched");
+        } else if (res.status === 202) {
+          const data = res.data.issue;
+          setAIStats(data);
+          setShowAI(true);
+          toast("Response Fetched from DB");
+        } else {
+          toast("Error getting response from AI");
+          return;
+        }
+      })
+      .catch((error) => {
+        toast("Error fetching AI response");
+        console.log(error);
+        return;
+      });
+  }, []);
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch = issue.title
@@ -235,7 +268,7 @@ const Issues = ({ params }: { params: { name: string } }) => {
                   >
                     <Card
                       key={issue.id}
-                      className="p-6 hover:shadow-md transition-shadow border-border/50 cursor-pointer"
+                      className="p-6 hover:shadow-md  transition-shadow border-border/50 cursor-pointer"
                       onClick={() =>
                         router.push(
                           `/issues/detail/${issue.owner}/${encodeURIComponent(
@@ -260,20 +293,31 @@ const Issues = ({ params }: { params: { name: string } }) => {
                             </a>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline" className="gap-1">
-                              <GitBranch className="w-3 h-3" />
-                              {issue.owner}/{issue.name}
-                            </Badge>
-                            {issue.labels.map((label) => (
-                              <Badge
-                                key={label}
-                                variant="outline"
-                                className={getLabelColor(label)}
-                              >
-                                {label}
+                          <div className="flex justify-between  flex-wrap items-center gap-2">
+                            <div className="">
+                              <Badge variant="outline" className="gap-1">
+                                <GitBranch className="w-3 h-3" />
+                                {issue.owner}/{issue.name}
                               </Badge>
-                            ))}
+                              {issue.labels.map((label) => (
+                                <Badge
+                                  key={label}
+                                  variant="outline"
+                                  className={getLabelColor(label)}
+                                >
+                                  {label}
+                                </Badge>
+                              ))}
+                            </div>
+                            <Button
+                              variant={"outline"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                aiTake();
+                              }}
+                            >
+                              AI's Take
+                            </Button>
                           </div>
 
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -285,6 +329,23 @@ const Issues = ({ params }: { params: { name: string } }) => {
                               <Calendar className="w-4 h-4" />
                               {new Date(issue.createdAt).toLocaleDateString()}
                             </span>
+                          </div>
+                          <div className=" flex items-center gap-4">
+                            {aiStats?.skills?.map((skill, index) => (
+                              <Badge
+                                key={index}
+                                className="font-semibold text-transparent bg-clip-text  bg-linear-to-r from-sky-600 via-yellow-600 to-sky-700 text-clip  "
+                                variant={"outline"}
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                            <Badge
+                              variant={"secondary"}
+                              className="text-sm dark:text-neutral-100  "
+                            >
+                              {aiStats?.difficulty}
+                            </Badge>
                           </div>
                         </div>
                       </div>
