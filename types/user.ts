@@ -8,6 +8,7 @@ export interface User {
   bio?: string | "No Bio"
   emailVerified?: Date | string | null;
   image?: string | null;
+  skills?: string[]
   // keep relations optional on the client DTO
   repos?: Repository[];
   accounts?: Account[];

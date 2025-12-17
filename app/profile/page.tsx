@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 export default function () {
   const { data: session, status } = useSession();
   const [editBio, setEditbio] = useState(false);
+  const [editSkills, setEditSkills] = useState(false);
   const [user, setUser] = useState<User>();
   const [skills, setSkills] = useState<string[]>([]);
   const bioRef = useRef<HTMLTextAreaElement>(null);
@@ -34,14 +35,33 @@ export default function () {
       e.preventDefault();
       const value = skillInputRef.current?.value.trim();
 
-      console.log(value);
       if (value) {
-        setSkills((prev) => [...prev, value]);
+        console.log("before setSkills");
+        setSkills((prev) => {
+          const updatedSkills = [...prev, value];
+          console.log("calling be for skills add");
+          const skillsFiltered = updatedSkills.filter(
+            (skill) => skill.length > 0
+          );
+          axios
+            .post("/api/user", {
+              skills: skillsFiltered,
+            })
+            .then((res) => {
+              setEditSkills(false);
+              toast("Skills updated");
+            })
+            .catch((error) => {
+              setEditSkills(false);
+              toast("Error in updating skills");
+            });
+          return updatedSkills;
+        });
         if (skillInputRef.current) {
           skillInputRef.current.value = "";
         }
       }
-      console.log(skills);
+      // console.log(skills);
     }
   }
 
@@ -50,6 +70,7 @@ export default function () {
       const res = await axios.get(`/api/user`);
       console.log(res.data.user);
       setUser(res.data.user);
+      setSkills((prev) => [...prev, ...res.data.user.skills]);
     };
 
     fetchUser();
@@ -76,19 +97,78 @@ export default function () {
             <p className="text-neutral-600 font-medium">
               {session?.user.email}
             </p>
-            <h1>
+            {/* <h1>
               user skills
               <br />
               {skills.map((skill, index) => (
                 <Badge key={index}>{skill}</Badge>
               ))}
             </h1>
-            <Input onKeyDown={enterSkill} ref={skillInputRef} />
+            <Input onKeyDown={enterSkill} ref={skillInputRef} /> */}
 
             <Badge variant={"outline"} className="mt-7 font-semibold ">
               <GithubIcon /> repository
             </Badge>
+            <div className="flex  w-full gap-2 mt-3 ">
+              {skills?.map((skill, index) => (
+                <Badge variant={"outline"} key={index}>
+                  {skill}
+                </Badge>
+              ))}
+            </div>
           </div>
+          {editSkills ? (
+            <InputGroup>
+              {/* <InputGroupTextarea
+                placeholder="Add skills"
+                ref={skillInputRef}
+              /> */}
+              <Input
+                placeholder="Add skills"
+                onKeyDown={enterSkill}
+                ref={skillInputRef}
+              />
+              <InputGroupAddon align="block-end">
+                <InputGroupText className="text-muted-foreground text-xs">
+                  Press Enter to add Skill
+                </InputGroupText>
+                <InputGroupButton
+                  size="sm"
+                  className="ml-auto"
+                  variant="default"
+                  onClick={async () => {
+                    // const skillsFiltered = skills.filter(
+                    //   (skill) => skill.length > 0
+                    // );
+                    // await axios.post("/api/user", {
+                    //   skills: skillsFiltered,
+                    // });
+                    setEditSkills(false);
+                    // toast("Skills updated");
+                  }}
+                >
+                  Done
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+          ) : (
+            <InputGroup>
+              <Input placeholder="Skills" disabled />
+
+              <InputGroupAddon align="block-end">
+                <InputGroupButton
+                  size="sm"
+                  className="ml-auto"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditSkills(true);
+                  }}
+                >
+                  Edit
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+          )}
           {editBio ? (
             <InputGroup>
               <InputGroupTextarea placeholder="Add to your bio" ref={bioRef} />
