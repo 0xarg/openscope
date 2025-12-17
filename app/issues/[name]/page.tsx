@@ -60,7 +60,7 @@ const Issues = ({ params }: { params: { name: string } }) => {
   const [error, setError] = useState(false);
   const [refresh, setRefresh] = useState(false);
   const [issues, setIssues] = useState<Issue[]>([]);
-  const [aiStats, setAIStats] = useState<AIStatsIssue>();
+  const [aiStats, setAIStats] = useState<AIStatsIssue[]>([]);
   const [showAI, setShowAI] = useState<Boolean>(false);
 
   useEffect(() => {
@@ -120,7 +120,9 @@ const Issues = ({ params }: { params: { name: string } }) => {
         if (res.status === 200) {
           console.log(res.data);
           const data = safeParseAI(res.data.issue.content);
-          setAIStats(data);
+          data.id = res.data.issueId;
+          data.number = res.data.issueNumber;
+          setAIStats((prev) => [...prev, res.data.issue]);
           setShowAI(true);
           toast("AI Response Fetched");
         } else if (res.status === 202) {
@@ -330,23 +332,37 @@ const Issues = ({ params }: { params: { name: string } }) => {
                               {new Date(issue.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          <div className=" flex items-center gap-4">
-                            {aiStats?.skills?.map((skill, index) => (
-                              <Badge
-                                key={index}
-                                className="font-semibold text-transparent bg-clip-text  bg-linear-to-r from-sky-600 via-yellow-600 to-sky-700 text-clip  "
-                                variant={"outline"}
-                              >
-                                {skill}
-                              </Badge>
-                            ))}
-                            <Badge
-                              variant={"secondary"}
-                              className="text-sm dark:text-neutral-100  "
-                            >
-                              {aiStats?.difficulty}
-                            </Badge>
-                          </div>
+                          {aiStats && (
+                            <div className=" flex items-center gap-4">
+                              {aiStats
+                                .filter(
+                                  (stats) => stats.issueNumber === issue.number
+                                )
+                                .flatMap((stats) => stats.skills)
+                                .map((skill, index) => (
+                                  <Badge
+                                    key={index}
+                                    className="font-semibold text-transparent bg-clip-text  bg-linear-to-r from-sky-600 via-yellow-600 to-sky-700 text-clip  "
+                                    variant={"outline"}
+                                  >
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              {aiStats
+                                .filter(
+                                  (stats) => stats.issueNumber === issue.number
+                                )
+                                .map((stats, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant={"secondary"}
+                                    className="text-sm dark:text-neutral-100  "
+                                  >
+                                    {stats.difficulty}
+                                  </Badge>
+                                ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </Card>

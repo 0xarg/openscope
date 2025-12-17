@@ -95,6 +95,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         issue: response,
+        issueId: newIssue.id,
+        issueNumber: newIssue.githubId
       },
       { status: 200 }
     );
