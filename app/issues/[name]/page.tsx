@@ -61,7 +61,7 @@ const Issues = ({ params }: { params: { name: string } }) => {
   const [refresh, setRefresh] = useState(false);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [aiStats, setAIStats] = useState<AIStatsIssue[]>([]);
-  const [showAI, setShowAI] = useState<Boolean>(false);
+  const [aiLoader, setAIloader] = useState<Boolean>(false);
 
   useEffect(() => {
     setLoading(true);
@@ -112,27 +112,38 @@ const Issues = ({ params }: { params: { name: string } }) => {
   ];
 
   const aiTake = useCallback(async (issue: Issue) => {
-    await axios
+    return await axios
       .post("/api/ai/issue/stats", {
         issue: issue,
       })
       .then((res) => {
         if (res.status === 200) {
           console.log(res.data);
-          const data = safeParseAI(res.data.issue.content);
-          data.id = res.data.issueId;
-          data.number = res.data.issueNumber;
-          setAIStats((prev) => [...prev, res.data.issue]);
-          setShowAI(true);
+          const data = res.data.issue;
+          // const data = safeParseAI(res.data.issue);
+          // data.id = res.data.issueId;
+          // data.number = res.data.issueNumber;
+          setAIStats((prev) => {
+            const exists = prev.some((stat) => stat.githubId === data.githubId);
+            if (exists) return prev;
+
+            return [...prev, data];
+          });
+          // setAIStats((prev) => [...prev, res.data.issue]);
+          // setShowAI(true);
           toast("AI Response Fetched");
         } else if (res.status === 202) {
           const data = res.data.issue;
           console.log(data);
-          setAIStats((prev) => [...prev, res.data.issue]);
+          setAIStats((prev) => {
+            const exists = prev.some((stat) => stat.githubId === data.number);
+            if (exists) return prev;
 
-          setShowAI(true);
+            return [...prev, data];
+          });
+          // setShowAI(true);
           toast("Response Fetched from DB");
-          console.log(aiStats);
+          // setAIloader(false);
         } else {
           toast("Error getting response from AI");
           return;
@@ -142,7 +153,8 @@ const Issues = ({ params }: { params: { name: string } }) => {
         toast("Error fetching AI response");
         console.log(error);
         return;
-      });
+      })
+      .finally(() => setAIloader(false));
   }, []);
 
   const filteredIssues = issues.filter((issue) => {
@@ -264,86 +276,86 @@ const Issues = ({ params }: { params: { name: string } }) => {
                   </Button>
                 </Card>
               ) : (
-                filteredIssues.map((issue, index) => (
-                  <motion.div
-                    key={issue.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card
+                filteredIssues.map((issue, index) => {
+                  const statsForIssue = aiStats.find(
+                    (stats) => stats.githubId === issue.githubId
+                  );
+                  return (
+                    <motion.div
                       key={issue.id}
-                      className="p-6 hover:shadow-md  transition-shadow border-border/50 cursor-pointer"
-                      onClick={() =>
-                        router.push(
-                          `/issues/detail/${issue.owner}/${encodeURIComponent(
-                            issue.name
-                          )}/${issue.githubId}`
-                        )
-                      }
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
                     >
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-start gap-3">
-                            <h3 className="text-lg font-semibold leading-tight flex-1">
-                              {issue.title}
-                            </h3>
-                            <a
-                              href={issue.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          </div>
-
-                          <div className="flex justify-between  flex-wrap items-center gap-2">
-                            <div className="">
-                              <Badge variant="outline" className="gap-1">
-                                <GitBranch className="w-3 h-3" />
-                                {issue.owner}/{issue.name}
-                              </Badge>
-                              {issue.labels.map((label) => (
-                                <Badge
-                                  key={label}
-                                  variant="outline"
-                                  className={getLabelColor(label)}
-                                >
-                                  {label}
-                                </Badge>
-                              ))}
+                      <Card
+                        key={issue.id}
+                        className="p-6 hover:shadow-md  transition-shadow border-border/50 cursor-pointer"
+                        onClick={() =>
+                          router.push(
+                            `/issues/detail/${issue.owner}/${encodeURIComponent(
+                              issue.name
+                            )}/${issue.githubId}`
+                          )
+                        }
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-start gap-3">
+                              <h3 className="text-lg font-semibold leading-tight flex-1">
+                                {issue.title}
+                              </h3>
+                              <a
+                                href={issue.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
                             </div>
-                            <Button
-                              variant={"outline"}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                aiTake(issue);
-                              }}
-                            >
-                              AI's Take
-                            </Button>
-                          </div>
 
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <MessageSquare className="w-4 h-4" />
-                              {issue.comments} comments
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(issue.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          {aiStats && (
-                            <div className=" flex items-center gap-4">
-                              {aiStats
-                                .filter(
-                                  (stats) =>
-                                    stats.issueNumber === issue.githubId
-                                )
-                                .flatMap((stats) => stats.skills)
-                                .map((skill, index) => (
+                            <div className="flex justify-between  flex-wrap items-center gap-2">
+                              <div className="">
+                                <Badge variant="outline" className="gap-1">
+                                  <GitBranch className="w-3 h-3" />
+                                  {issue.owner}/{issue.name}
+                                </Badge>
+                                {issue.labels.map((label) => (
+                                  <Badge
+                                    key={label}
+                                    variant="outline"
+                                    className={getLabelColor(label)}
+                                  >
+                                    {label}
+                                  </Badge>
+                                ))}
+                              </div>
+                              <Button
+                                variant={"outline"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAIloader(true);
+                                  aiTake(issue);
+                                }}
+                              >
+                                {aiLoader && <CustomSpinner />}
+                                {!aiLoader && <span>AI's Take </span>}
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <MessageSquare className="w-4 h-4" />
+                                {issue.comments} comments
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {new Date(issue.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {statsForIssue && (
+                              <div className=" flex  items-center gap-4">
+                                {statsForIssue?.skills.map((skill, index) => (
                                   <Badge
                                     key={index}
                                     className="font-semibold text-transparent bg-clip-text  bg-linear-to-r from-sky-600 via-yellow-600 to-sky-700 text-clip  "
@@ -352,27 +364,22 @@ const Issues = ({ params }: { params: { name: string } }) => {
                                     {skill}
                                   </Badge>
                                 ))}
-                              {aiStats
-                                .filter(
-                                  (stats) =>
-                                    stats.issueNumber === issue.githubId
-                                )
-                                .map((stats, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant={"secondary"}
-                                    className="text-sm dark:text-neutral-100  "
-                                  >
-                                    {stats.difficulty}
-                                  </Badge>
-                                ))}
-                            </div>
-                          )}
+
+                                <Badge
+                                  key={index}
+                                  variant={"secondary"}
+                                  className="text-sm dark:text-neutral-100  "
+                                >
+                                  {statsForIssue.difficulty}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))
+                      </Card>
+                    </motion.div>
+                  );
+                })
               )}
             </div>
           )}

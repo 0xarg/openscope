@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const issue = await prisma.issue.findFirst({
       where: {
-        githubId: data.issue.number,
+        githubId: data.issue.githubId,
       },
     });
     console.log("issue is below");
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     const newIssue = await prisma.issue.create({
       data: {
         githubUrl: data.issue.url,
-        githubId: data.issue.id,
+        githubId: data.issue.githubId,
         title: data.issue.title,
         repoId: repo.id,
         ailabels: finaldata.labels,
@@ -105,8 +105,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         issue: newIssue,
-        issueId: newIssue.id,
-        issueNumber: newIssue.githubId,
+        // issueId: newIssue.id,
+        // issueNumber: newIssue.githubId,
       },
       { status: 200 }
     );
