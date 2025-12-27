@@ -63,13 +63,17 @@ model VerificationToken {
 }
 
 model Repository {
-  id        Int     @id @default(autoincrement())
-  githubUrl String
-  name      String
-  owner     String
-  type      String?
-  issues    Issue[]
-  user      User[]  @relation("UserRepos")
+  id          Int     @id @default(autoincrement())
+  githubUrl   String
+  name        String
+  owner       String
+  description String
+  language    String
+  stars       Int
+  forks       Int
+  issueCount  Int
+  issues      Issue[]
+  user        User[]  @relation("UserRepos")
 
   @@unique([name, owner], name: "name_owner")
 }

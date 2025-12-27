@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,17 +28,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-
-interface Repository {
-  id: string;
-  name: string;
-  owner: string;
-  description?: string;
-  language: string;
-  stars: number;
-  forks: number;
-  issueCount: number;
-}
+import axios from "axios";
+import { RepositoryDB } from "@/types/database/github/repository";
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",
@@ -47,50 +38,6 @@ const languageColors: Record<string, string> = {
   Rust: "bg-orange-500",
   Go: "bg-cyan-500",
 };
-
-const mockRepos: Repository[] = [
-  {
-    id: "1",
-    name: "vite",
-    owner: "vitejs",
-    description: "Next Generation Frontend Tooling",
-    language: "TypeScript",
-    stars: 64500,
-    forks: 5800,
-    issueCount: 156,
-  },
-  {
-    id: "2",
-    name: "ui",
-    owner: "shadcn",
-    description:
-      "Beautifully designed components built with Radix UI and Tailwind CSS.",
-    language: "TypeScript",
-    stars: 52000,
-    forks: 2900,
-    issueCount: 89,
-  },
-  {
-    id: "3",
-    name: "next.js",
-    owner: "vercel",
-    description: "The React Framework for the Web",
-    language: "TypeScript",
-    stars: 118000,
-    forks: 25400,
-    issueCount: 342,
-  },
-  {
-    id: "4",
-    name: "react",
-    owner: "facebook",
-    description: "The library for web and native user interfaces",
-    language: "JavaScript",
-    stars: 220000,
-    forks: 45000,
-    issueCount: 1205,
-  },
-];
 
 function formatNumber(num: number): string {
   if (num >= 1000) {
@@ -101,16 +48,37 @@ function formatNumber(num: number): string {
 
 export default function Repositories() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [repos, setRepos] = useState<Repository[]>(mockRepos);
+  const [repos, setRepos] = useState<RepositoryDB[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [repoUrl, setRepoUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const { toast } = useToast();
 
+  const fetchRepositories = useCallback(async () => {
+    try {
+      const res = await axios.get("api/repository");
+      if (res.status !== 200) {
+        throw new Error("Error fetching repositories");
+      }
+      setRepos(res.data.repos);
+      console.log(res.data);
+      setIsPageLoading(false);
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Something went wrong, Try again later",
+        description:
+          "There is a issue while fetching repositories, so try again later",
+      });
+    }
+  }, []);
+
   useEffect(() => {
-    const timer = setTimeout(() => setIsPageLoading(false), 600);
-    return () => clearTimeout(timer);
+    // const timer = setTimeout(() => setIsPageLoading(false), 600);
+    // return () => clearTimeout(timer);
+    setIsPageLoading(true);
+    fetchRepositories();
   }, []);
 
   const handleSync = () => {

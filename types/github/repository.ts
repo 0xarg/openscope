@@ -11,7 +11,7 @@ export interface GitHubRepository {
   name: string;
   fullName: string;
   htmlUrl: string;
-  description: string | null;
+  description: string | "null";
 
   owner: GitHubRepoOwner;
 

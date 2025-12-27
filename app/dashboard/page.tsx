@@ -93,13 +93,31 @@ export default function Dashboard() {
     }, 1500);
   };
 
-  const handleTrack = (id: string) => {
+  const handleAddRepo = useCallback(async (url: string, id: string) => {
     const tracked = trackedIds.includes(id);
-    setTrackedIds((prev) =>
-      tracked ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-    toast({ title: tracked ? "Issue untracked" : "Issue tracked" });
-  };
+
+    try {
+      axios
+        .post("/api/repository", {
+          githubUrl: url,
+        })
+        .then((res) => {
+          if (res.status === 201) {
+            toast({ title: tracked ? "Issue untracked" : "Issue tracked" });
+            setTrackedIds((prev) =>
+              tracked ? prev.filter((i) => i !== id) : [...prev, id]
+            );
+          }
+        });
+    } catch (error) {}
+  }, []);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchTrendingRepos();
+    // const timer = setTimeout(() => setIsLoading(false), 500);
+    // return () => clearTimeout(timer);
+  }, [fetchTrendingRepos]);
 
   const toggleAI = (id: string) => {
     setExpandedAI((prev) =>
@@ -244,7 +262,9 @@ export default function Dashboard() {
                       {/* Repo */}
                       <div className="col-span-4 flex min-w-0 items-center gap-3">
                         <button
-                          onClick={() => handleTrack(repo.id.toString())}
+                          onClick={() =>
+                            handleAddRepo(repo.htmlUrl, repo.id.toString())
+                          }
                           className="hover:bg-accent/10 shrink-0 rounded-md p-1 transition-all hover:scale-110"
                         >
                           <Bookmark
@@ -445,7 +465,9 @@ export default function Dashboard() {
                         {repo.name}
                       </Link>
                       <button
-                        onClick={() => handleTrack(repo.id.toString())}
+                        onClick={() =>
+                          handleAddRepo(repo.htmlUrl, repo.id.toString())
+                        }
                         className="hover:bg-accent/10 rounded-lg p-1.5 transition-colors"
                       >
                         <Bookmark
