@@ -2,7 +2,7 @@ import { GitHubIssue, GitHubIssueAPI } from "@/types/github/issues";
 
 export function mapGitHubIssue(issue: GitHubIssueAPI): GitHubIssue {
   return {
-    id: issue.id,
+    githubId: issue.id,
     number: issue.number,
     title: issue.title,
     body: issue.body,
@@ -18,6 +18,7 @@ export function mapGitHubIssue(issue: GitHubIssueAPI): GitHubIssue {
 
     htmlUrl: issue.html_url,
     apiUrl: issue.url,
+    repositoryAPIUrl: issue.repository_url,
 
     author: {
       login: issue.user.login,

@@ -85,15 +85,15 @@ export async function POST(req: NextRequest) {
         },
       },
     });
-    const alreadyAdded = !!repoExist
+    const alreadyAdded = !!repoExist;
 
     if (alreadyAdded) {
-       return NextResponse.json(
-         {
-           message: "Repository already added",
-         },
-         { status: 502 }
-       );
+      return NextResponse.json(
+        {
+          message: "Repository already added",
+        },
+        { status: 502 }
+      );
     }
 
     await prisma.user.update({
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
         repos: {
           connectOrCreate: {
             where: {
-              name_owner: { name: name, owner },
+              name_owner: { name, owner },
             },
             create: {
               name: repo.name,

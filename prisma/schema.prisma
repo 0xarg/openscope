@@ -79,27 +79,43 @@ model Repository {
 }
 
 model Issue {
-  id        Int    @id @default(autoincrement())
-  githubUrl String
-  githubId  Int? // GitHub issue number (#1234)
+  id               Int    @id @default(autoincrement())
+  // --- GitHub identity ---
+  githubId         String // GitHub global issue ID
+  githubNumber     Int // Issue number within repo (#123)
+  githubUrl        String // htmlUrl
+  githubApiUrl     String // apiUrl
+  repositoryAPIUrl String
 
-  title  String
-  body   String?
-  labels String[]
+  // --- Core issue content ---
+  title String
+  body  String?
 
+  state         String // "open" | "closed"
+  isPullRequest Boolean @default(false)
+  commentsCount Int     @default(0)
+
+  // --- Labels ---
+  labels   String[] // GitHub labels (names only)
+  ailabels String[] // AI-generated labels
+
+  // --- Relations ---
   repoId Int
   repo   Repository @relation(fields: [repoId], references: [id])
 
-  summary    String?
-  difficulty String?
-  ailabels   String[]
-  skills     String[]
-  cause      String?
-  updatedAt  DateTime?
-
   users UserIssue[]
 
+  // --- AI / enrichment ---
+
+  // --- Timestamps ---
+  githubCreatedAt DateTime
+  githubUpdatedAt DateTime
+  githubClosedAt  DateTime?
+
   createdAt DateTime @default(now())
+
+  @@unique([githubId])
+  @@unique([repoId, githubNumber])
 }
 
 model UserIssue {
@@ -108,11 +124,15 @@ model UserIssue {
   userId  Int
   issueId Int
 
-  user  User  @relation(fields: [userId], references: [id])
-  issue Issue @relation(fields: [issueId], references: [id])
-
+  user           User     @relation(fields: [userId], references: [id])
+  issue          Issue    @relation(fields: [issueId], references: [id])
+  summary        String?
+  difficulty     String?
+  skills         String[]
+  cause          String?
   approach       String?
   recommendation String?
+  status         String
   notes          String?
 
   createdAt DateTime @default(now())

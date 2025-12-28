@@ -12,7 +12,11 @@ export async function GET() {
         userId,
       },
       include: {
-        issue: true,
+        issue: {
+          include: {
+            repo: true,
+          },
+        },
       },
     });
     if (!issues) {
