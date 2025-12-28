@@ -46,16 +46,6 @@ const getLanguageClass = (lang: string) => {
   return classes[lang] || "bg-muted text-muted-foreground";
 };
 
-const getPopularityClass = (pop: string) => {
-  const classes: Record<string, string> = {
-    Popular: "badge-popular",
-    Famous: "badge-famous",
-    Rising: "badge-rising",
-    Legendary: "badge-legendary",
-  };
-  return classes[pop] || "";
-};
-
 export default function Issues({
   params,
 }: {
@@ -73,6 +63,7 @@ export default function Issues({
   const { toast } = useToast();
 
   const fetchRepositoryIssues = useCallback(async () => {
+    setIsLoading(true);
     try {
       const paramsData = await params;
       const owner = paramsData.owner;
@@ -83,28 +74,15 @@ export default function Issues({
         owner: owner,
       });
       setAllIssues(res.data.issues);
-      console.log(res.data);
+      setIsLoading(false);
     } catch (error) {
       console.log("Error fetching issues, ", error);
       toast({ title: "Error fetching issues;" });
     }
   }, []);
 
-  const fetchTrendingRepos = useCallback(async () => {
-    try {
-      const res = await axios.get("/api/githubTrending");
-      setAllRepos(res.data.repos);
-      console.log(res.data);
-      setIsLoading(false);
-    } catch (error) {
-      console.log(error);
-      toast({
-        title: "Failed while fetching Trending repos",
-      });
-    }
-  }, []);
-
   const fetchGithubRepoInfo = useCallback(async () => {
+    // setIsLoading(true);
     const paramsData = await params;
     const owner = paramsData.owner;
     const name = paramsData.name;
@@ -116,63 +94,9 @@ export default function Issues({
 
   useEffect(() => {
     setIsLoading(true);
-    fetchGithubRepoInfo();
     fetchRepositoryIssues();
+    fetchGithubRepoInfo();
   }, []);
-
-  // const handleSync = () => {
-  //   setIsLoading(true);
-  //   toast({
-  //     title: "Syncing issues...",
-  //     description: "Fetching latest data from GitHub",
-  //   });
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //     toast({ title: "Synced", description: "Issues are up to date" });
-  //   }, 1500);
-  // };
-
-  const handleAddRepo = useCallback(async (url: string, id: string) => {
-    const tracked = trackedIds.includes(id);
-
-    try {
-      axios
-        .post("/api/repository", {
-          githubUrl: url,
-        })
-        .then((res) => {
-          if (res.status === 201) {
-            toast({ title: tracked ? "Issue untracked" : "Issue tracked" });
-            setTrackedIds((prev) =>
-              tracked ? prev.filter((i) => i !== id) : [...prev, id]
-            );
-          }
-        });
-    } catch (error) {}
-  }, []);
-
-  useEffect(() => {
-    setIsLoading(true);
-    fetchTrendingRepos();
-    // const timer = setTimeout(() => setIsLoading(false), 500);
-    // return () => clearTimeout(timer);
-  }, [fetchTrendingRepos]);
-
-  // const toggleAI = (id: string) => {
-  //   setExpandedAI((prev) =>
-  //     prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-  //   );
-  // };
-  const filteredRepos = allRepos.filter((repo) => {
-    const matchesSearch =
-      repo.owner.login.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      repo.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLanguage =
-      languageFilter === "All" || repo.primaryLanguage === languageFilter;
-    const matchesPopularity =
-      popularityFilter === "All" || repo.popularity === popularityFilter;
-    return matchesSearch && matchesLanguage && matchesPopularity;
-  });
 
   function getIssueDaysAgo(dateString: string): number {
     const issueDate = new Date(dateString);
@@ -191,14 +115,8 @@ export default function Issues({
     return `${Math.floor(daysAgo / 365)} years ago`;
   }
 
-  // const { repoId } = useParams<{ repoId: string }>();
-  // const [searchQuery, setSearchQuery] = useState("");
   const [ageFilter, setAgeFilter] = useState("All");
   const [labelFilter, setLabelFilter] = useState("All");
-  // const [trackedIds, setTrackedIds] = useState<string[]>(["101", "301"]);
-  // const [expandedAI, setExpandedAI] = useState<string[]>([]);
-  // const [isLoading, setIsLoading] = useState(true);
-  // const { toast } = useToast();
 
   const issueAges = [
     "All",
@@ -208,9 +126,6 @@ export default function Issues({
     "Older",
   ];
 
-  // const normalize = (label: string) => label.replace(/[^a-z0-9]+/gi, "-");
-
-  // Extract unique labels from issues
   const availableLabels = [
     "All",
     ...Array.from(
@@ -218,10 +133,6 @@ export default function Issues({
     ).sort(),
   ];
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
   const getDifficultyClass = (difficulty: string) => {
     const classes: Record<string, string> = {
       easy: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
@@ -298,37 +209,55 @@ export default function Issues({
               <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 flex items-center justify-center shrink-0">
                 <FolderGit2 className="h-7 w-7 text-accent" />
               </div>
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-xl sm:text-2xl font-bold">
-                    {repoInfo?.owner.login}/{repoInfo?.name}
-                  </h1>
-                  <a
-                    href={`https://github.com/${repoInfo?.owner.login}/${repoInfo?.name}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 rounded-lg hover:bg-accent/10 transition-colors"
-                  >
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                  </a>
+              {isLoading ? (
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                    <div className="h-4 bg-muted rounded w-64 animate-pulse" />
+                  </div>
+                  <div className="h-4 bg-muted rounded w-64 animate-pulse" />
+
+                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                    <div className="h-4 bg-muted rounded w-64 animate-pulse" />
+
+                    <div className="h-4 bg-muted rounded w-64 animate-pulse" />
+
+                    <div className="h-4 bg-muted rounded w-64 animate-pulse" />
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {repoInfo?.description}
-                </p>
-                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Star className="h-4 w-4 text-amber-500" />
-                    {formatDigits(repoInfo?.stars || 2)}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <GitFork className="h-4 w-4" />
-                    {formatDigits(repoInfo?.forks || 3)}
-                  </span>
-                  <Badge variant="outline" className="text-xs rounded-full">
-                    {repoInfo?.primaryLanguage}
-                  </Badge>
+              ) : (
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h1 className="text-xl sm:text-2xl font-bold">
+                      {repoInfo?.owner.login}/{repoInfo?.name}
+                    </h1>
+                    <a
+                      href={`https://github.com/${repoInfo?.owner.login}/${repoInfo?.name}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg hover:bg-accent/10 transition-colors"
+                    >
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    </a>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {repoInfo?.description}
+                  </p>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Star className="h-4 w-4 text-amber-500" />
+                      {formatDigits(repoInfo?.stars || 2)}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <GitFork className="h-4 w-4" />
+                      {formatDigits(repoInfo?.forks || 3)}
+                    </span>
+                    <Badge variant="outline" className="text-xs rounded-full">
+                      {repoInfo?.primaryLanguage}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -339,7 +268,7 @@ export default function Issues({
             <div>
               <h2 className="text-lg font-semibold">Open Issues</h2>
               <p className="text-sm text-muted-foreground">
-                {allIssues.length} recent issues found
+                {filteredIssues.length} recent issues found
               </p>
             </div>
             <div className="flex items-center gap-2">

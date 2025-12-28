@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
 interface TrackedIssue {
   id: string;
   title: string;
@@ -77,6 +78,28 @@ export default function TrackedIssues() {
   const [expandedAI, setExpandedAI] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  const fetchTrackedIssues = useCallback(async () => {
+    try {
+      const res = await axios.get("/api/issues/tracked");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+
+        switch (status) {
+          case 400:
+            toast({
+              title: "No issues tracked",
+              description: "No issues tracked",
+            });
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
