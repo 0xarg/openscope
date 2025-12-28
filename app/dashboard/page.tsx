@@ -25,6 +25,7 @@ import {
 import Link from "next/link";
 import axios from "axios";
 import { GitHubRepository } from "@/types/github/repository";
+import { formatDigits } from "@/lib/utils/formatDigits";
 
 const languages = ["All", "TypeScript", "JavaScript", "Python", "Rust", "Go"];
 const popularities = ["All", "Legendary", "Famous", "Popular", "Rising"];
@@ -309,7 +310,7 @@ export default function Dashboard() {
                       <div className="col-span-2  flex justify-center ">
                         <span className="text-muted-foreground flex items-center justify-end gap-1.5 font-mono text-sm">
                           <Star className="h-3.5 w-3.5 text-amber-500" />
-                          {repo.stars}
+                          {formatDigits(repo.stars)}
                         </span>
                       </div>
 
@@ -317,7 +318,7 @@ export default function Dashboard() {
                       <div className="col-span-2 flex justify-center">
                         <span className="text-muted-foreground flex items-center justify-end gap-1.5 font-mono text-sm">
                           <GitFork className="h-3.5 w-3.5" />
-                          {repo.forks}
+                          {formatDigits(repo.forks)}
                         </span>
                       </div>
 

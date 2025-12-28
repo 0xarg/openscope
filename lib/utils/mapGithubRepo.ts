@@ -2,16 +2,16 @@ import { GitHubRepository } from "@/types/github/repository";
 
 export function mapGitHubRepo(apiRepo: any): GitHubRepository {
   let popularity;
-  if (apiRepo.stargazers_count > 50000) {
+  if (apiRepo.stargazers_count > 150000) {
     popularity = "Legendary";
-  } else if (apiRepo.stargazers_count > 30000) {
+  } else if (apiRepo.stargazers_count > 125000) {
     popularity = "Famous";
-  } else if (apiRepo.stargazers_count > 1000) {
+  } else if (apiRepo.stargazers_count > 90000) {
     popularity = "Popular";
-  } else if (apiRepo.stargazers_count > 1000) {
+  } else if (apiRepo.stargazers_count > 45000) {
     popularity = "Rising";
   } else {
-    popularity = "unknown";
+    popularity = "New";
   }
   return {
     id: apiRepo.id,
