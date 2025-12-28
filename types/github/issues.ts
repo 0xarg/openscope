@@ -12,7 +12,8 @@ export interface GitHubLabel {
 }
 
 export interface GitHubIssue {
-  id: number;
+  id?: number;
+  githubId: string;
   number: number;
 
   title: string;
@@ -29,13 +30,14 @@ export interface GitHubIssue {
 
   htmlUrl: string;
   apiUrl: string;
+  repositoryAPIUrl: string;
 
   author: GitHubUser;
   labels: GitHubLabel[];
 }
 
 export interface GitHubIssueAPI {
-  id: number;
+  id: string;
   number: number;
   title: string;
   body: string | null;
@@ -44,6 +46,7 @@ export interface GitHubIssueAPI {
 
   html_url: string;
   url: string;
+  repository_url: string;
 
   comments: number;
 

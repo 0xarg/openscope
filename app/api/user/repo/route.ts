@@ -75,7 +75,6 @@ export async function POST(req: NextRequest) {
               name,
               owner,
               githubUrl,
-              type: parsedData.data.type,
             },
           },
         },

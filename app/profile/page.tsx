@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ import {
   Code2,
   Heart,
 } from "lucide-react";
+import { User } from "@/types/database/user/user";
+import axios from "axios";
 
 const userData = {
   name: "Alex Developer",
@@ -94,14 +96,27 @@ const allInterests = [
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(userData);
+  const [profile, setProfile] = useState<User>();
   const [selectedInterests, setSelectedInterests] = useState(
     userData.interests
   );
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const { toast } = useToast();
 
+  const fetechUserDetails = useCallback(async () => {
+    try {
+      const res = await axios.get("/api/user");
+      setProfile(res.data.user);
+      console.log(res.data);
+    } catch (error) {
+      toast({
+        title: "Error fetching user details",
+      });
+    }
+  }, []);
+
   useEffect(() => {
+    fetechUserDetails();
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
@@ -110,7 +125,7 @@ export default function Profile() {
   }, []);
 
   const handleSave = () => {
-    setProfile({ ...profile, interests: selectedInterests });
+    // setProfile({ ...profile, interests: selectedInterests });
     setIsEditing(false);
     toast({
       title: "Profile saved",
@@ -122,28 +137,28 @@ export default function Profile() {
     {
       icon: Target,
       label: "Tracked",
-      value: profile.stats.tracked,
+      value: "dum1",
       color: "from-blue-500 to-cyan-500",
       bgColor: "from-blue-500/20 to-cyan-500/20",
     },
     {
       icon: GitPullRequest,
       label: "PRs Merged",
-      value: profile.stats.prsMerged,
+      value: "dm2",
       color: "from-accent to-emerald-500",
       bgColor: "from-accent/20 to-emerald-500/20",
     },
     {
       icon: Flame,
       label: "Day Streak",
-      value: profile.stats.streak,
+      value: "dm3",
       color: "from-orange-500 to-amber-500",
       bgColor: "from-orange-500/20 to-amber-500/20",
     },
     {
       icon: GitCommit,
       label: "Commits",
-      value: profile.stats.contributions,
+      value: "dm4",
       color: "from-violet-500 to-purple-500",
       bgColor: "from-violet-500/20 to-purple-500/20",
     },
@@ -202,8 +217,13 @@ export default function Profile() {
                 {/* Avatar Section */}
                 <div className="flex flex-col items-center lg:items-start">
                   <div className="relative group">
-                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-2xl bg-gradient-to-br from-accent via-violet-500 to-purple-600 flex items-center justify-center text-4xl lg:text-5xl font-bold text-white shadow-2xl shadow-accent/30">
-                      {profile.name.charAt(0)}
+                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-full bg-gradient-to-br from-accent via-violet-500 to-purple-600 flex items-center justify-center text-4xl lg:text-5xl font-bold text-white shadow-2xl shadow-accent/30">
+                      {/* {profile?.name} */}
+                      <img
+                        src={profile?.image!}
+                        alt=""
+                        className="rounded-full"
+                      />
                     </div>
                     <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-success flex items-center justify-center border-4 border-background">
                       <Zap className="h-4 w-4 text-white" />
@@ -216,14 +236,12 @@ export default function Profile() {
                   <div className="mt-4 px-4 py-2 rounded-full bg-gradient-to-r from-accent/20 to-violet-500/20 border border-accent/30">
                     <span className="text-sm font-medium">
                       {
-                        experienceLevels.find(
-                          (l) => l.value === profile.experienceLevel
-                        )?.icon
+                        experienceLevels.find((l) => l.value === "begginer")
+                          ?.icon
                       }{" "}
                       {
-                        experienceLevels.find(
-                          (l) => l.value === profile.experienceLevel
-                        )?.label
+                        experienceLevels.find((l) => l.value === "begginer")
+                          ?.label
                       }
                     </span>
                   </div>
@@ -236,27 +254,27 @@ export default function Profile() {
                       {isEditing ? (
                         <div className="space-y-4 max-w-md mx-auto lg:mx-0">
                           <Input
-                            value={profile.name}
-                            onChange={(e) =>
-                              setProfile({ ...profile, name: e.target.value })
-                            }
+                            value={profile?.name}
+                            // onChange={(e) =>
+                            //   setProfile({ ...profile, name: e.target.value })
+                            // }
                             placeholder="Name"
                             className="text-xl font-bold bg-background/50"
                           />
                           <Input
-                            value={profile.email}
-                            onChange={(e) =>
-                              setProfile({ ...profile, email: e.target.value })
-                            }
+                            value={profile?.email!}
+                            // onChange={(e) =>
+                            //   setProfile({ ...profile, email: e.target.value })
+                            // }
                             placeholder="Email"
                             type="email"
                             className="bg-background/50"
                           />
                           <Textarea
-                            value={profile.bio}
-                            onChange={(e) =>
-                              setProfile({ ...profile, bio: e.target.value })
-                            }
+                            value={profile?.bio!}
+                            // onChange={(e) =>
+                            //   setProfile({ ...profile, bio: e.target.value })
+                            // }
                             placeholder="Bio"
                             rows={3}
                             className="bg-background/50"
@@ -265,16 +283,16 @@ export default function Profile() {
                       ) : (
                         <>
                           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
-                            {profile.name}
+                            {profile?.name}
                           </h1>
-                          <p className="text-muted-foreground mt-1 font-mono">
-                            @{profile.username}
-                          </p>
+                          {/* <p className="text-muted-foreground mt-1 font-mono">
+                            @{profile?.}
+                          </p> */}
                           <p className="text-sm text-muted-foreground mt-1">
-                            {profile.email}
+                            {profile?.email}
                           </p>
                           <p className="text-muted-foreground mt-4 max-w-xl">
-                            {profile.bio}
+                            {profile?.bio}
                           </p>
                         </>
                       )}
@@ -331,40 +349,40 @@ export default function Profile() {
                       <MapPin className="h-4 w-4 text-accent" />
                       {isEditing ? (
                         <Input
-                          value={profile.location}
-                          onChange={(e) =>
-                            setProfile({ ...profile, location: e.target.value })
-                          }
+                          value={"location"}
+                          // onChange={(e) =>
+                          //   setProfile({ ...profile, location: e.target.value })
+                          // }
                           className="h-7 w-32 text-xs bg-background/50"
                         />
                       ) : (
-                        profile.location
+                        " profile.location"
                       )}
                     </span>
                     <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
                       <LinkIcon className="h-4 w-4 text-accent" />
                       {isEditing ? (
                         <Input
-                          value={profile.website}
-                          onChange={(e) =>
-                            setProfile({ ...profile, website: e.target.value })
-                          }
+                          value={"profile.website"}
+                          // onChange={(e) =>
+                          //   setProfile({ ...profile, website: e.target.value })
+                          // }
                           className="h-7 w-40 text-xs bg-background/50"
                         />
                       ) : (
                         <a
-                          href={profile.website}
+                          href={"/"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:text-accent transition-colors"
                         >
-                          {profile.website}
+                          {"profile.website"}
                         </a>
                       )}
                     </span>
                     <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
                       <Calendar className="h-4 w-4 text-accent" />
-                      Joined {profile.joinedDate}
+                      Joined {"profile.joinedDate"}
                     </span>
                   </div>
                 </div>
@@ -434,21 +452,21 @@ export default function Profile() {
                           key={level.value}
                           whileHover={{ scale: isEditing ? 1.02 : 1 }}
                           whileTap={{ scale: isEditing ? 0.98 : 1 }}
-                          onClick={() =>
-                            isEditing &&
-                            setProfile({
-                              ...profile,
-                              experienceLevel: level.value,
-                            })
-                          }
+                          // onClick={() =>
+                          //   isEditing &&
+                          //   setProfile({
+                          //     ...profile,
+                          //     experienceLevel: level.value,
+                          //   })
+                          // }
                           className={cn(
                             "p-5 rounded-xl border text-center transition-all bg-gradient-to-br",
                             level.color,
-                            profile.experienceLevel === level.value
+                            "profile.experienceLevel" === level.value
                               ? "border-accent ring-2 ring-accent/20 shadow-lg"
                               : "border-border/50 hover:border-accent/50",
                             !isEditing &&
-                              profile.experienceLevel !== level.value &&
+                              " profile.experienceLevel" !== level.value &&
                               "opacity-50",
                             isEditing && "cursor-pointer"
                           )}
@@ -541,27 +559,27 @@ export default function Profile() {
                         {
                           icon: Target,
                           label: "Issues Tracked",
-                          value: profile.stats.tracked,
+                          value: "profile.stats.tracked",
                         },
                         {
                           icon: GitPullRequest,
                           label: "PRs Opened",
-                          value: profile.stats.prsOpened,
+                          value: "profile.stats.prsOpened",
                         },
                         {
                           icon: Award,
                           label: "PRs Merged",
-                          value: profile.stats.prsMerged,
+                          value: "profile.stats.prsMerged",
                         },
                         {
                           icon: Star,
                           label: "Stars Earned",
-                          value: profile.stats.totalStars,
+                          value: "profile.stats.totalStars",
                         },
                         {
                           icon: Users,
                           label: "Repos Following",
-                          value: profile.stats.repos,
+                          value: "profile.stats.repos",
                         },
                       ].map((item) => (
                         <div
@@ -636,7 +654,7 @@ export default function Profile() {
                     <div className="flex-1">
                       <p className="font-medium text-sm">GitHub</p>
                       <p className="text-xs text-muted-foreground font-mono">
-                        @{profile.username}
+                        @{profile?.name}
                       </p>
                     </div>
                     <Badge className="text-xs bg-accent/20 text-accent border-accent/40">

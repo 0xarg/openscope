@@ -54,13 +54,39 @@ export default function Issues({
   const [searchQuery, setSearchQuery] = useState("");
   const [languageFilter, setLanguageFilter] = useState("All");
   const [popularityFilter, setPopularityFilter] = useState("All");
-  const [trackedIds, setTrackedIds] = useState<string[]>(["1", "3"]);
+  const [trackedIds, setTrackedIds] = useState<string[]>([]);
   const [expandedAI, setExpandedAI] = useState<string[]>([]);
   const [repoInfo, setRepoInfo] = useState<GitHubRepository>();
   const [allRepos, setAllRepos] = useState<GitHubRepository[]>([]);
   const [allIssues, setAllIssues] = useState<GitHubIssue[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTracking, setIsTracking] = useState(false);
   const { toast } = useToast();
+
+  const trackedIssue = useCallback(async () => {
+    const res = await axios.get("/api/issues/tracked/ids");
+    if (res.data.trackedIds) {
+      setTrackedIds(res.data.trackedIds);
+    }
+  }, []);
+
+  const trackIssue = useCallback(async (issue: GitHubIssue) => {
+    toast({
+      title: "Tracking issue",
+    });
+    try {
+      const res = await axios.post("/api/issues/track", {
+        issue: issue,
+      });
+      toast({
+        title: "Issue tracked",
+        description: "Issue saved with AI insights",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Something went wrong" });
+    }
+  }, []);
 
   const fetchRepositoryIssues = useCallback(async () => {
     setIsLoading(true);
@@ -94,9 +120,10 @@ export default function Issues({
 
   useEffect(() => {
     setIsLoading(true);
+    trackedIssue();
     fetchRepositoryIssues();
     fetchGithubRepoInfo();
-  }, []);
+  }, [fetchRepositoryIssues]);
 
   function getIssueDaysAgo(dateString: string): number {
     const issueDate = new Date(dateString);
@@ -148,19 +175,20 @@ export default function Issues({
       title: "Syncing issues...",
       description: "Fetching latest data from GitHub",
     });
+    fetchRepositoryIssues();
     setTimeout(() => {
       setIsLoading(false);
       toast({ title: "Synced", description: "Issues are up to date" });
     }, 1500);
   };
 
-  const handleTrack = (id: string) => {
-    const tracked = trackedIds.includes(id);
-    setTrackedIds((prev) =>
-      tracked ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-    toast({ title: tracked ? "Issue untracked" : "Issue tracked" });
-  };
+  // const handleTrack = (id: string) => {
+  //   const tracked = trackedIds.includes(id);
+  //   setTrackedIds((prev) =>
+  //     tracked ? prev.filter((i) => i !== id) : [...prev, id]
+  //   );
+  //   toast({ title: tracked ? "Issue untracked" : "Issue tracked" });
+  // };
 
   const toggleAI = (id: string) => {
     setExpandedAI((prev) =>
@@ -366,8 +394,12 @@ export default function Issues({
           ) : filteredIssues.length > 0 ? (
             <div className="divide-y divide-border/50">
               {filteredIssues.map((issue) => {
-                const isExpanded = expandedAI.includes(issue.id.toString());
-                const isTracked = trackedIds.includes(issue.id.toString());
+                const isExpanded = expandedAI.includes(
+                  issue.githubId.toString()
+                );
+                const isTracked = trackedIds.includes(
+                  issue.githubId.toString()
+                );
 
                 return (
                   <div key={issue.id} className="group">
@@ -375,12 +407,18 @@ export default function Issues({
                       {/* Issue Title */}
                       <div className="col-span-5 flex items-center gap-3 min-w-0">
                         <button
-                          onClick={() => handleTrack(issue.id.toString())}
+                          onClick={() => {
+                            trackIssue(issue);
+                            setTrackedIds((prev) => [
+                              ...prev,
+                              issue.githubId.toString(),
+                            ]);
+                          }}
                           className="shrink-0 p-1 rounded-md transition-all hover:bg-accent/10 hover:scale-110"
                         >
                           <Bookmark
                             className={`h-4 w-4 transition-colors ${
-                              isTracked
+                              trackedIds.includes(issue.githubId.toString())
                                 ? "fill-accent text-accent"
                                 : "text-muted-foreground hover:text-accent"
                             }`}
@@ -436,7 +474,7 @@ export default function Issues({
                               ? "bg-accent/10 text-accent"
                               : "hover:bg-accent/10 hover:text-accent"
                           }`}
-                          onClick={() => toggleAI(issue.id.toString())}
+                          onClick={() => toggleAI(issue.githubId.toString())}
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                         </Button>
@@ -549,8 +587,8 @@ export default function Issues({
             ))
           ) : filteredIssues.length > 0 ? (
             filteredIssues.map((issue) => {
-              const isExpanded = expandedAI.includes(issue.id.toString());
-              const isTracked = trackedIds.includes(issue.id.toString());
+              const isExpanded = expandedAI.includes(issue.githubId.toString());
+              const isTracked = trackedIds.includes(issue.githubId.toString());
 
               return (
                 <div
@@ -570,12 +608,18 @@ export default function Issues({
                       </span>
                     </div>
                     <button
-                      onClick={() => handleTrack(issue.id.toString())}
+                      onClick={() => {
+                        trackIssue(issue);
+                        setTrackedIds((prev) => [
+                          ...prev,
+                          issue.githubId.toString(),
+                        ]);
+                      }}
                       className="shrink-0 p-1.5 rounded-md hover:bg-accent/10"
                     >
                       <Bookmark
                         className={`h-4 w-4 ${
-                          isTracked
+                          trackedIds.includes(issue.githubId.toString())
                             ? "fill-accent text-accent"
                             : "text-muted-foreground"
                         }`}
@@ -607,7 +651,7 @@ export default function Issues({
                       className={`h-8 gap-1.5 rounded-full ${
                         isExpanded ? "bg-accent/10 text-accent" : ""
                       }`}
-                      onClick={() => toggleAI(issue.id.toString())}
+                      onClick={() => toggleAI(issue.githubId.toString())}
                     >
                       <Sparkles className="h-3.5 w-3.5" />
                       AI

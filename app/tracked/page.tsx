@@ -3,6 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  formatDistanceToNow,
+  format,
+  formatDistanceToNowStrict,
+} from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
   Bookmark,
@@ -18,53 +23,54 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
-interface TrackedIssue {
-  id: string;
-  title: string;
-  repo: string;
-  repoOwner: string;
-  labels: string[];
-  difficulty: "easy" | "medium" | "hard";
-  skills: string[];
-  status: "not-started" | "in-progress" | "completed";
-  lastUpdated: string;
-}
+import { UserIssues } from "@/types/database/github/userIssues";
+// interface TrackedIssue {
+//   id: string;
+//   title: string;
+//   repo: string;
+//   repoOwner: string;
+//   labels: string[];
+//   difficulty: "easy" | "medium" | "hard";
+//   skills: string[];
+//   status: "not-started" | "in-progress" | "completed";
+//   lastUpdated: string;
+// }
 
-const trackedIssues: TrackedIssue[] = [
-  {
-    id: "1",
-    title: "Add TypeScript support for configuration files",
-    repo: "vite",
-    repoOwner: "vitejs",
-    labels: ["enhancement", "good first issue"],
-    difficulty: "easy",
-    skills: ["TypeScript", "Node.js"],
-    status: "in-progress",
-    lastUpdated: "2 hours ago",
-  },
-  {
-    id: "2",
-    title: "Improve error messages for invalid props",
-    repo: "ui",
-    repoOwner: "shadcn",
-    labels: ["bug", "dx"],
-    difficulty: "medium",
-    skills: ["React", "TypeScript"],
-    status: "not-started",
-    lastUpdated: "1 day ago",
-  },
-  {
-    id: "3",
-    title: "Add dark mode toggle animation",
-    repo: "next.js",
-    repoOwner: "vercel",
-    labels: ["feature request", "help wanted"],
-    difficulty: "easy",
-    skills: ["CSS", "React"],
-    status: "completed",
-    lastUpdated: "3 days ago",
-  },
-];
+// const trackedIssues: TrackedIssue[] = [
+//   {
+//     id: "1",
+//     title: "Add TypeScript support for configuration files",
+//     repo: "vite",
+//     repoOwner: "vitejs",
+//     labels: ["enhancement", "good first issue"],
+//     difficulty: "easy",
+//     skills: ["TypeScript", "Node.js"],
+//     status: "in-progress",
+//     lastUpdated: "2 hours ago",
+//   },
+//   {
+//     id: "2",
+//     title: "Improve error messages for invalid props",
+//     repo: "ui",
+//     repoOwner: "shadcn",
+//     labels: ["bug", "dx"],
+//     difficulty: "medium",
+//     skills: ["React", "TypeScript"],
+//     status: "not-started",
+//     lastUpdated: "1 day ago",
+//   },
+//   {
+//     id: "3",
+//     title: "Add dark mode toggle animation",
+//     repo: "next.js",
+//     repoOwner: "vercel",
+//     labels: ["feature request", "help wanted"],
+//     difficulty: "easy",
+//     skills: ["CSS", "React"],
+//     status: "completed",
+//     lastUpdated: "3 days ago",
+//   },
+// ];
 
 const statusTabs = [
   { key: "all", label: "All", icon: Bookmark },
@@ -77,11 +83,14 @@ export default function TrackedIssues() {
   const [activeTab, setActiveTab] = useState("all");
   const [expandedAI, setExpandedAI] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [trackedIssues, setTrackedIssues] = useState<UserIssues[]>([]);
   const { toast } = useToast();
 
   const fetchTrackedIssues = useCallback(async () => {
     try {
       const res = await axios.get("/api/issues/tracked");
+      setTrackedIssues(res.data.issues);
+      console.log(res.data);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
@@ -98,24 +107,22 @@ export default function TrackedIssues() {
             break;
         }
       }
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, []);
+    fetchTrackedIssues();
+  }, [fetchTrackedIssues]);
 
   const handleSync = () => {
     setIsLoading(true);
+    fetchTrackedIssues();
     toast({
       title: "Syncing tracked issues...",
       description: "Fetching latest status",
     });
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({ title: "Synced", description: "Tracked issues are up to date" });
-    }, 1500);
   };
 
   const toggleAI = (id: string) => {
@@ -271,7 +278,7 @@ export default function TrackedIssues() {
           ) : filteredIssues.length > 0 ? (
             <div className="divide-y divide-border/50">
               {filteredIssues.map((issue) => {
-                const isAIExpanded = expandedAI.includes(issue.id);
+                const isAIExpanded = expandedAI.includes(issue.id.toString());
                 return (
                   <div key={issue.id} className="group">
                     <div className="grid grid-cols-12 gap-4 px-6 py-4 items-center transition-all duration-200 hover:bg-accent/5">
@@ -283,22 +290,22 @@ export default function TrackedIssues() {
                       {/* Repo */}
                       <Link href={`/issue/${issue.id}`} className="col-span-3">
                         <span className="font-mono text-sm text-muted-foreground hover:text-foreground transition-colors truncate block">
-                          {issue.repoOwner}/{issue.repo}
+                          {issue.issue.repo.owner}/{issue.issue.repo.name}
                         </span>
                       </Link>
 
                       {/* Title */}
                       <Link href={`/issue/${issue.id}`} className="col-span-4">
                         <span className="text-sm font-medium truncate block hover:text-accent transition-colors">
-                          {issue.title}
+                          {issue.issue.title}
                         </span>
                       </Link>
 
                       {/* Labels */}
                       <div className="col-span-2 flex items-center gap-1.5">
-                        {issue.labels.slice(0, 2).map((label) => (
+                        {issue.issue.labels.map((label, index) => (
                           <Badge
-                            key={label}
+                            key={index}
                             variant="secondary"
                             className="text-[10px] px-2 py-0.5 rounded-full font-normal truncate max-w-[80px]"
                           >
@@ -317,7 +324,7 @@ export default function TrackedIssues() {
                               ? "bg-accent/10 text-accent"
                               : "hover:bg-accent/10 hover:text-accent"
                           }`}
-                          onClick={() => toggleAI(issue.id)}
+                          onClick={() => toggleAI(issue.id.toString())}
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                         </Button>
@@ -336,7 +343,7 @@ export default function TrackedIssues() {
 
                     {/* AI Expanded */}
                     {isAIExpanded && (
-                      <div className="mx-6 mb-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-accent/10 border border-accent/20 animate-fade-in">
+                      <div className="mx-6 my-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-accent/10 border border-accent/20 animate-fade-in">
                         <div className="flex items-center gap-2 mb-3">
                           <Sparkles className="h-4 w-4 text-accent" />
                           <span className="text-sm font-medium text-accent">
@@ -381,7 +388,10 @@ export default function TrackedIssues() {
                               Updated:
                             </span>
                             <span className="text-foreground font-medium">
-                              {issue.lastUpdated}
+                              {formatDistanceToNowStrict(
+                                new Date(issue.issue.githubUpdatedAt),
+                                { addSuffix: true }
+                              )}
                             </span>
                           </div>
                         </div>
@@ -421,7 +431,7 @@ export default function TrackedIssues() {
             ))
           ) : filteredIssues.length > 0 ? (
             filteredIssues.map((issue) => {
-              const isAIExpanded = expandedAI.includes(issue.id);
+              const isAIExpanded = expandedAI.includes(issue.id.toString());
               return (
                 <div
                   key={issue.id}
@@ -430,7 +440,7 @@ export default function TrackedIssues() {
                   <div className="flex items-start justify-between gap-2 mb-2">
                     {getStatusBadge(issue.status)}
                     <span className="font-mono text-xs text-muted-foreground">
-                      {issue.repoOwner}/{issue.repo}
+                      {issue.issue.repo.owner}/{issue.issue.repo.name}
                     </span>
                   </div>
 
@@ -438,14 +448,14 @@ export default function TrackedIssues() {
                     href={`/issue/${issue.id}`}
                     className="font-medium text-sm hover:text-accent transition-colors block mb-3"
                   >
-                    {issue.title}
+                    {issue.issue.title}
                   </Link>
 
                   <div className="flex items-center justify-between">
                     <div className="flex gap-1">
-                      {issue.labels.slice(0, 2).map((label) => (
+                      {issue.issue.labels.map((label, index) => (
                         <Badge
-                          key={label}
+                          key={index}
                           variant="secondary"
                           className="text-[10px]"
                         >
@@ -457,7 +467,7 @@ export default function TrackedIssues() {
                       variant="ghost"
                       size="sm"
                       className="h-7 gap-1 text-xs"
-                      onClick={() => toggleAI(issue.id)}
+                      onClick={() => toggleAI(issue.id.toString())}
                     >
                       <Sparkles className="h-3 w-3" />
                       {isAIExpanded ? (
@@ -500,7 +510,11 @@ export default function TrackedIssues() {
                           ))}
                         </div>
                         <p className="text-muted-foreground">
-                          Updated: {issue.lastUpdated}
+                          Updated:
+                          {formatDistanceToNowStrict(
+                            new Date(issue.issue.githubUpdatedAt),
+                            { addSuffix: true }
+                          )}
                         </p>
                       </div>
                       <Link
