@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       {
         message: "Invalid Github Url",
       },
-      { status: 500 }
+      { status: 501 }
     );
   }
   const name = urlParsed.repo;
@@ -73,6 +73,29 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    const repoExist = await prisma.repository.findFirst({
+      where: {
+        owner,
+        name,
+        user: {
+          some: {
+            id: userId,
+          },
+        },
+      },
+    });
+    const alreadyAdded = !!repoExist
+
+    if (alreadyAdded) {
+       return NextResponse.json(
+         {
+           message: "Repository already added",
+         },
+         { status: 502 }
+       );
+    }
+
     await prisma.user.update({
       where: {
         id: userId,

@@ -30,6 +30,7 @@ import {
 import Link from "next/link";
 import axios from "axios";
 import { RepositoryDB } from "@/types/database/github/repository";
+import { filterTrendingRepo } from "@/lib/utils/filterTrendingRepo";
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",
@@ -51,6 +52,7 @@ export default function Repositories() {
   const [repos, setRepos] = useState<RepositoryDB[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [repoUrl, setRepoUrl] = useState("");
+  const [popularRepos, setPopularRepos] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const { toast } = useToast();
@@ -62,7 +64,6 @@ export default function Repositories() {
         throw new Error("Error fetching repositories");
       }
       setRepos(res.data.repos);
-      console.log(res.data);
       setIsPageLoading(false);
     } catch (error) {
       console.log(error);
@@ -72,13 +73,6 @@ export default function Repositories() {
           "There is a issue while fetching repositories, so try again later",
       });
     }
-  }, []);
-
-  useEffect(() => {
-    // const timer = setTimeout(() => setIsPageLoading(false), 600);
-    // return () => clearTimeout(timer);
-    setIsPageLoading(true);
-    fetchRepositories();
   }, []);
 
   const handleSync = () => {
@@ -100,21 +94,85 @@ export default function Repositories() {
       repo.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddRepo = () => {
+  const handleAddRepo = useCallback(async (url: string) => {
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      const res = await axios.post("/api/repository", {
+        githubUrl: url,
+      });
       setIsLoading(false);
       setIsAddDialogOpen(false);
-      setRepoUrl("");
+      fetchRepositories();
       toast({
         title: "Repository added",
         description: "The repository has been added to your list.",
       });
-    }, 1500);
-  };
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
 
-  const popularRepos = ["facebook/react", "vercel/next.js", "microsoft/vscode"];
+        switch (status) {
+          case 500:
+            setIsLoading(false);
+            setIsAddDialogOpen(false);
+            toast({
+              title: "Something went wrong",
+              description: "Repository not added, please try again later.",
+            });
+            break;
+          case 501:
+            setIsLoading(false);
+            toast({
+              title: "Invalid Github Repository url",
+              description: "Repository URL not valid, please try again.",
+            });
+            break;
+          case 502:
+            setIsLoading(false);
+            // setIsAddDialogOpen(false)
+            toast({
+              title: "Repository already added",
+              description: "Repository exists in database.",
+            });
+            break;
 
+          default:
+            break;
+        }
+      }
+    }
+  }, []);
+
+  // const handleAddRepo = () => {
+  //   setIsLoading(true);
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //     setIsAddDialogOpen(false);
+  //     setRepoUrl("");
+  //     toast({
+  //       title: "Repository added",
+  //       description: "The repository has been added to your list.",
+  //     });
+  //   }, 1500);
+  // };
+
+  // const popularRepos = ["facebook/react", "vercel/next.js", "microsoft/vscode"];
+
+  const trendingRepos = useCallback(async () => {
+    const names = await filterTrendingRepo();
+    if (names) {
+      setPopularRepos(names?.trendingRepoNames);
+    } else {
+      setPopularRepos(["facebook/react", "vercel/next.js", "microsoft/vscode"]);
+    }
+  }, []);
+
+  useEffect(() => {
+    trendingRepos();
+    setIsPageLoading(true);
+    fetchRepositories();
+  }, []);
   return (
     <AppLayout>
       <div className="p-4 sm:p-6">
@@ -197,7 +255,7 @@ export default function Repositories() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={handleAddRepo}
+                    onClick={() => handleAddRepo(repoUrl)}
                     disabled={!repoUrl || isLoading}
                   >
                     {isLoading ? (

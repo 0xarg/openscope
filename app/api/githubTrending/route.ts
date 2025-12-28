@@ -8,7 +8,7 @@ export async function GET() {
 
   try {
     const res = await axios.get(
-      `https://api.github.com/search/repositories?q=stars:>1000&pushed:>${sinceDate}&sort=stars&order=desc&open_issues>50&per_page=200`,
+      `https://api.github.com/search/repositories?q=stars:>1000&pushed:>${sinceDate}&sort=stars&order=desc&open_issues>50&per_page=100`,
       {
         headers: {
           Accept: "application/vnd.github+json",
