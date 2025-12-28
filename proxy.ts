@@ -6,9 +6,9 @@ export function proxy(req: NextRequest) {
   const isPublicPath = path === "/login" || path === "/";
 
   const token = req.cookies.get("next-auth.session-token")?.value || "";
-  // if (isPublicPath && token) {
-  //   return NextResponse.redirect(new URL("/", req.nextUrl));
-  // }
+  if (isPublicPath && token) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+  }
 
   if (!isPublicPath && !token) {
     return NextResponse.redirect(new URL("/", req.nextUrl));

@@ -1,4 +1,6 @@
 import prisma from "@/db/prisma";
+import { mapGitHubIssue } from "@/lib/utils/mapGithubIssue";
+import { GitHubIssue, GitHubIssueAPI } from "@/types/github/issues";
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -67,25 +69,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const data = await req.json();
+  const owner = data.owner;
   const name = data.name;
 
   try {
-    const repo = await prisma.repository.findFirstOrThrow({
-      where: {
-        name,
-      },
-    });
-
-    if (repo === null) {
-      return NextResponse.json(
-        {
-          message: "Repo not found",
-        },
-        { status: 402 }
-      );
-    }
-    const res = await axios.get(
-      `https://api.github.com/repos/${repo.owner}/${repo.name}/issues?per_page=100`,
+    const res = await axios.get<GitHubIssueAPI[]>(
+      `https://api.github.com/repos/${owner}/${name}/issues?per_page=100`,
       {
         headers: {
           Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
@@ -93,26 +82,16 @@ export async function POST(req: NextRequest) {
         },
       }
     );
-    const issues = res.data;
-    //
-    const filteredIssues = issues
+    const issues: GitHubIssue[] = res.data
       .filter((issue: any) => !issue.pull_request)
-      .map((issue: any) => ({
-        githubId: issue.number,
-        body: issue.body,
-        title: issue.title,
-        state: issue.state,
-        labels: issue.labels.map((l: any) => l.name),
-        comments: issue.comments,
-        createdAt: issue.created_at,
-        updatedAt: issue.updated_at,
-        url: issue.html_url,
-        owner: repo.owner,
-        name: repo.name,
-      }));
-    return NextResponse.json({
-      filteredIssues,
-    });
+      .map(mapGitHubIssue);
+
+    return NextResponse.json(
+      {
+        issues,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.log(error);
     return NextResponse.json(

@@ -11,11 +11,11 @@ export async function GET() {
   try {
     const user = await prisma.user.findUnique({
       where: {
-        id:userId,
+        id: userId,
       },
-      include:{
-        repos:true
-      }
+      include: {
+        repos: true,
+      },
     });
     return NextResponse.json(
       {
@@ -33,7 +33,6 @@ export async function GET() {
     );
   }
 }
-
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -63,26 +62,25 @@ export async function POST(req: NextRequest) {
   }
   try {
     await prisma.user.update({
-        where:{
-            id:userId
+      where: {
+        id: userId,
+      },
+      data: {
+        repos: {
+          connectOrCreate: {
+            where: {
+              name_owner: { name: name, owner },
+            },
+            create: {
+              name,
+              owner,
+              githubUrl,
+              type: parsedData.data.type,
+            },
+          },
         },
-        data:{
-            repos:{
-                connectOrCreate:{
-                    where:{
-                        name_owner:{name:name,owner}
-                    },
-                    create:{
-                      name,
-                      owner,
-                      githubUrl,
-                      type: parsedData.data.type,
-
-                    }
-                }
-            }
-        }
-    })
+      },
+    });
 
     return NextResponse.json(
       {
@@ -100,7 +98,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
