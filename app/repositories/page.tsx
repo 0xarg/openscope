@@ -383,7 +383,7 @@ export default function Repositories() {
                     className="h-8 text-xs gap-1.5 rounded-full group/btn hover:bg-accent/10 hover:text-accent"
                     asChild
                   >
-                    <Link href="/dashboard">
+                    <Link href={`/issues/${repo.owner}/${repo.name}`}>
                       View
                       <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
                     </Link>
