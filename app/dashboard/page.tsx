@@ -97,27 +97,46 @@ export default function Dashboard() {
     });
   };
 
-  const handleAddRepo = useCallback(async (url: string, githubId: string) => {
-    const tracked = trackedIds.includes(githubId);
-    if (trackedIds.includes(githubId)) {
-      toast({
-        title: "Already tracking",
-        description: "Repository already tracked",
+  const handleAddRepo = useCallback(
+    async (githubUrl: string, githubId: string) => {
+      let alreadyTracked = false;
+      setTrackedIds((prev) => {
+        if (prev.includes(githubId)) {
+          alreadyTracked = true;
+          return prev;
+        }
+        return [...prev, githubId];
       });
-    }
-
-    try {
-      axios
-        .post("/api/repository", {
-          githubUrl: url,
-        })
-        .then((res) => {
-          if (res.status === 201) {
-            setTrackedIds((prev) => [...prev, githubId]);
-          }
+      if (alreadyTracked) {
+        toast({
+          title: "Already tracking",
+          description: "Repository already tracked",
         });
-    } catch (error) {}
-  }, []);
+        return;
+      }
+      try {
+        toast({
+          title: "Adding repository to tracking list",
+          description: "Adding may to take few seconds",
+        });
+        const res = await axios.post("/api/repository", {
+          githubUrl,
+        });
+
+        toast({
+          title: "Respository added",
+          description: "Sucessfully added repository to traking list",
+        });
+      } catch (error) {
+        setTrackedIds((prev) => prev.filter((id) => id !== githubId));
+        toast({
+          title: "Error tracking repository",
+          description: "Unable to track repository now",
+        });
+      }
+    },
+    [toast]
+  );
 
   useEffect(() => {
     setIsLoading(true);
@@ -270,13 +289,16 @@ export default function Dashboard() {
                       <div className="col-span-4 flex min-w-0 items-center gap-3">
                         <button
                           onClick={() =>
-                            handleAddRepo(repo.htmlUrl, repo.githubId)
+                            handleAddRepo(
+                              repo.htmlUrl,
+                              repo.githubId.toString()
+                            )
                           }
                           className="hover:bg-accent/10 shrink-0 rounded-md p-1 transition-all hover:scale-110"
                         >
                           <Bookmark
                             className={`h-4 w-4 transition-colors ${
-                              isTracked
+                              trackedIds.includes(repo.githubId.toString())
                                 ? "text-accent fill-accent"
                                 : "text-muted-foreground hover:text-accent"
                             }`}
@@ -473,13 +495,13 @@ export default function Dashboard() {
                       </Link>
                       <button
                         onClick={() =>
-                          handleAddRepo(repo.htmlUrl, repo.githubId)
+                          handleAddRepo(repo.htmlUrl, repo.githubId.toString())
                         }
                         className="hover:bg-accent/10 rounded-lg p-1.5 transition-colors"
                       >
                         <Bookmark
                           className={`h-4 w-4 transition-colors ${
-                            trackedIds.includes(repo.githubId)
+                            trackedIds.includes(repo.githubId.toString())
                               ? "text-accent fill-accent"
                               : "text-muted-foreground"
                           }`}

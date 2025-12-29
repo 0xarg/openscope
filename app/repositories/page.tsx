@@ -26,6 +26,8 @@ import {
   FolderGit2,
   Loader2,
   RefreshCw,
+  Info,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
@@ -92,6 +94,25 @@ export default function Repositories() {
       repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       repo.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
       repo.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleUntrackRepo = useCallback(
+    async (id: number) => {
+      try {
+        await axios.delete(`/api/repository/?id=${id}`);
+        toast({
+          title: "Untracked repository",
+          description: "You are not tracking this repository anymore",
+        });
+        setRepos((prev) => prev.filter((repo) => repo.id !== id));
+      } catch (error) {
+        toast({
+          title: "Internal Serever Error, Try again later",
+          description: "Error while untracking repository",
+        });
+      }
+    },
+    [toast]
   );
 
   const handleAddRepo = useCallback(async (url: string) => {
@@ -303,8 +324,16 @@ export default function Repositories() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 flex items-center justify-center shrink-0 group-hover:border-accent/40 transition-colors">
-                      <FolderGit2 className="h-6 w-6 text-accent" />
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-accent/10 to-accent/5 border  flex items-center justify-center shrink-0 group-hover:border-accent/40 transition-colors">
+                      {repo.ownerAvatarUrl ? (
+                        <img
+                          src={repo.ownerAvatarUrl}
+                          className="rounded-full "
+                          alt=""
+                        />
+                      ) : (
+                        <FolderGit2 className="h-6 w-6 text-accent" />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold group-hover:text-accent transition-colors truncate">
@@ -315,7 +344,7 @@ export default function Repositories() {
                       </p>
                     </div>
                   </div>
-                  <a
+                  {/* <a
                     href={`https://github.com/${repo.owner}/${repo.name}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -323,7 +352,34 @@ export default function Repositories() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                  </a>
+                  </a> */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Link
+                      href={`/repositories/${repo.id}`}
+                      className="p-2 rounded-lg hover:bg-accent/10 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Info className="h-4 w-4 text-accent" />
+                    </Link>
+                    <a
+                      href={`https://github.com/${repo.owner}/${repo.name}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-lg hover:bg-accent/10 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    </a>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUntrackRepo(repo.id);
+                      }}
+                      className="p-2 rounded-lg hover:bg-destructive/10 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Description */}

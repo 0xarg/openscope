@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       { status: 501 }
     );
   }
+  console.log(urlParsed);
   const name = urlParsed.repo;
   const owner = urlParsed.owner ?? "";
 
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
               name: repo.name,
               owner: repo.owner.login,
               githubUrl: repo.htmlUrl,
-              githubId: repo.githubId,
+              githubId: repo.githubId.toString(),
               ownerAvatarUrl: repo.owner.avatarUrl,
               description: repo.description,
               language: repo.primaryLanguage,

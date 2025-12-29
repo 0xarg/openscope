@@ -120,9 +120,9 @@ export default function Issues({
 
   useEffect(() => {
     setIsLoading(true);
+    fetchGithubRepoInfo();
     trackedIssue();
     fetchRepositoryIssues();
-    fetchGithubRepoInfo();
   }, [fetchRepositoryIssues]);
 
   function getIssueDaysAgo(dateString: string): number {
