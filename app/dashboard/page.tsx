@@ -75,23 +75,16 @@ export default function Dashboard() {
     }
   }, []);
 
-  useEffect(() => {
-    setIsLoading(true);
-    fetchTrendingRepos();
-    // const timer = setTimeout(() => setIsLoading(false), 500);
-    // return () => clearTimeout(timer);
-  }, [fetchTrendingRepos]);
-
   const handleSync = () => {
     setIsLoading(true);
     toast({
       title: "Syncing issues...",
       description: "Fetching latest data from GitHub",
     });
-    setTimeout(() => {
+    fetchTrendingRepos().then((res) => {
       setIsLoading(false);
       toast({ title: "Synced", description: "Issues are up to date" });
-    }, 1500);
+    });
   };
 
   const handleAddRepo = useCallback(async (url: string, id: string) => {
@@ -116,8 +109,6 @@ export default function Dashboard() {
   useEffect(() => {
     setIsLoading(true);
     fetchTrendingRepos();
-    // const timer = setTimeout(() => setIsLoading(false), 500);
-    // return () => clearTimeout(timer);
   }, [fetchTrendingRepos]);
 
   const toggleAI = (id: string) => {
