@@ -26,6 +26,7 @@ import Link from "next/link";
 import axios from "axios";
 import { GitHubRepository } from "@/types/github/repository";
 import { formatDigits } from "@/lib/utils/formatDigits";
+import { RepositoryWithAI } from "@/types/ai/repositoryAI";
 
 const languages = ["All", "TypeScript", "JavaScript", "Python", "Rust", "Go"];
 const popularities = ["All", "Legendary", "Famous", "Popular", "Rising"];
@@ -56,9 +57,10 @@ export default function Dashboard() {
   const [languageFilter, setLanguageFilter] = useState("All");
   const [popularityFilter, setPopularityFilter] = useState("All");
   const [trackedIds, setTrackedIds] = useState<string[]>([]);
-  const [expandedAI, setExpandedAI] = useState<string[]>([]);
-  const [allRepos, setAllRepos] = useState<GitHubRepository[]>([]);
+  const [expandedAI, setExpandedAI] = useState<string>("");
+  const [allRepos, setAllRepos] = useState<RepositoryWithAI[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAILoading, setIsAILoading] = useState(true);
   const { toast } = useToast();
 
   const fetchTrendingRepos = useCallback(async () => {
@@ -66,12 +68,46 @@ export default function Dashboard() {
       const res = await axios.get("/api/githubTrending");
       setAllRepos(res.data.repos);
       console.log(res.data);
-      setIsLoading(false);
     } catch (error) {
       console.log(error);
       toast({
         title: "Failed while fetching Trending repos",
       });
+    }
+  }, []);
+  const fetchAIData = useCallback(async (repo: RepositoryWithAI) => {
+    toast({
+      title: "Getting AI insights",
+      description: "Please wait for few seconds to get insights",
+    });
+    setExpandedAI(repo.githubId.toString());
+    setIsAILoading(true);
+
+    try {
+      const res = await axios.post("/api/repository/ai/basic", {
+        repo,
+      });
+      const data = res.data;
+      setAllRepos((prev) =>
+        prev.map((i) =>
+          i.githubId.toString() === repo.githubId.toString()
+            ? {
+                ...i,
+                ai: {
+                  ...i.ai,
+                  ...data.ai,
+                },
+              }
+            : i
+        )
+      );
+    } catch (error) {
+      toast({
+        title: "Please try again after sometime",
+        description: "There was a error fetching AI insights",
+      });
+    } finally {
+      setIsAILoading(false);
     }
   }, []);
 
@@ -86,18 +122,14 @@ export default function Dashboard() {
   }, []);
 
   const handleSync = () => {
-    setIsLoading(true);
     toast({
       title: "Syncing issues...",
       description: "Fetching latest data from GitHub",
     });
-    fetchTrendingRepos().then((res) => {
-      setIsLoading(false);
-      toast({ title: "Synced", description: "Issues are up to date" });
-    });
+    loadPageData();
   };
 
-  const handleAddRepo = useCallback(
+  const handleTrackRepo = useCallback(
     async (githubUrl: string, githubId: string) => {
       let alreadyTracked = false;
       setTrackedIds((prev) => {
@@ -138,17 +170,30 @@ export default function Dashboard() {
     [toast]
   );
 
-  useEffect(() => {
+  const loadPageData = useCallback(async () => {
     setIsLoading(true);
-    fetchTrackedReposIds();
-    fetchTrendingRepos();
-  }, []);
+    setExpandedAI("");
+    try {
+      await Promise.all([fetchTrendingRepos(), fetchTrendingRepos()]);
+    } finally {
+      toast({ title: "Synced", description: "Everything is up to date" });
+      setIsLoading(false);
+    }
+  }, [fetchTrackedReposIds, fetchTrendingRepos]);
 
-  const toggleAI = (id: string) => {
-    setExpandedAI((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+  const getMatchClass = (difficulty: string) => {
+    const classes: Record<string, string> = {
+      high: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+      medium: "bg-amber-500/10 text-amber-500 border-amber-500/30",
+      low: "bg-rose-500/10 text-rose-500 border-rose-500/30",
+    };
+    return classes[difficulty] || "";
   };
+
+  useEffect(() => {
+    loadPageData();
+  }, [loadPageData]);
+
   const filteredRepos = allRepos.filter((repo) => {
     const matchesSearch =
       repo.owner.login.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -281,6 +326,17 @@ export default function Dashboard() {
                 const isExpanded = expandedAI.includes(
                   repo.githubId.toString()
                 );
+                let matchLevel = "unknown";
+                if (repo.ai?.match) {
+                  const score = parseInt(repo.ai.match);
+                  if (score >= 80) {
+                    matchLevel = "high";
+                  } else if (score >= 40) {
+                    matchLevel = "medium";
+                  } else {
+                    matchLevel = "low";
+                  }
+                }
                 const isTracked = trackedIds.includes(repo.githubId.toString());
                 return (
                   <div key={repo.githubId} className="group">
@@ -289,7 +345,7 @@ export default function Dashboard() {
                       <div className="col-span-4 flex min-w-0 items-center gap-3">
                         <button
                           onClick={() =>
-                            handleAddRepo(
+                            handleTrackRepo(
                               repo.htmlUrl,
                               repo.githubId.toString()
                             )
@@ -372,7 +428,7 @@ export default function Dashboard() {
                               ? "bg-accent/10 text-accent"
                               : "hover:bg-accent/10 hover:text-accent"
                           }`}
-                          onClick={() => toggleAI(repo.githubId)}
+                          onClick={() => fetchAIData(repo)}
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                         </Button>
@@ -391,34 +447,34 @@ export default function Dashboard() {
                         <div className="flex flex-wrap items-center gap-8 text-sm">
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground">
-                              Difficulty:
+                              Match:
                             </span>
-                            <Badge
-                              variant="outline"
-                              className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 rounded-full text-xs"
-                            >
-                              Easy
-                            </Badge>
+                            {isAILoading ? (
+                              <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className={` rounded-full text-xs ${getMatchClass(
+                                  matchLevel
+                                )}`}
+                              >
+                                {repo.ai?.match}%
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground">
-                              Est. Time:
+                              Activity Level:
                             </span>
-                            <span className="font-medium">2-4 hours</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                              Skills:
-                            </span>
-                            <div className="flex gap-1.5">
-                              <span className="text-accent bg-accent/10 rounded-full px-2 py-0.5 font-mono text-xs">
-                                TypeScript
+                            {isAILoading ? (
+                              <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                            ) : (
+                              <span className="font-medium">
+                                {repo.ai?.activityLevel}
                               </span>
-                              <span className="text-accent bg-accent/10 rounded-full px-2 py-0.5 font-mono text-xs">
-                                React
-                              </span>
-                            </div>
+                            )}
                           </div>
+
                           <Link
                             href={`/issue/${repo.githubId}`}
                             className="text-accent group/link ml-auto flex items-center gap-1.5 font-medium hover:underline"
@@ -477,6 +533,17 @@ export default function Dashboard() {
             ? filteredRepos.map((repo) => {
                 const isExpanded = expandedAI.includes(repo.githubId);
                 const isTracked = trackedIds.includes(repo.githubId);
+                let matchLevel = "unknown";
+                if (repo.ai?.match) {
+                  const score = parseInt(repo.ai.match);
+                  if (score >= 80) {
+                    matchLevel = "high";
+                  } else if (score >= 40) {
+                    matchLevel = "medium";
+                  } else {
+                    matchLevel = "low";
+                  }
+                }
 
                 return (
                   <div
@@ -495,7 +562,10 @@ export default function Dashboard() {
                       </Link>
                       <button
                         onClick={() =>
-                          handleAddRepo(repo.htmlUrl, repo.githubId.toString())
+                          handleTrackRepo(
+                            repo.htmlUrl,
+                            repo.githubId.toString()
+                          )
                         }
                         className="hover:bg-accent/10 rounded-lg p-1.5 transition-colors"
                       >
@@ -549,7 +619,7 @@ export default function Dashboard() {
                         className={`h-8 gap-1.5 rounded-full text-xs ${
                           isExpanded ? "bg-accent/10 text-accent" : ""
                         }`}
-                        onClick={() => toggleAI(repo.githubId)}
+                        onClick={() => fetchAIData(repo)}
                       >
                         <Sparkles className="h-3.5 w-3.5" />
                         AI
@@ -567,31 +637,34 @@ export default function Dashboard() {
                         <div className="space-y-3 text-xs">
                           <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">
-                              Difficulty:
+                              Match:
                             </span>
-                            <Badge
-                              variant="outline"
-                              className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 rounded-full text-[10px]"
-                            >
-                              Easy
-                            </Badge>
+                            {isAILoading ? (
+                              <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className={` rounded-full text-[10px] ${getMatchClass(
+                                  matchLevel
+                                )}`}
+                              >
+                                {repo.ai?.match}%
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">
-                              Est. Time:
+                              Activity Level
                             </span>
-                            <span className="font-medium">2-4 hours</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">
-                              Skills:
-                            </span>
-                            <div className="flex gap-1">
-                              <span className="text-accent bg-accent/10 rounded-full px-2 py-0.5 font-mono text-[10px]">
-                                TypeScript
+                            {isAILoading ? (
+                              <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                            ) : (
+                              <span className="font-medium">
+                                {repo.ai?.activityLevel}
                               </span>
-                            </div>
+                            )}
                           </div>
+
                           <Link
                             href={`/issue/${repo.githubId}`}
                             className="text-accent flex items-center justify-center gap-1.5 pt-2 font-medium"

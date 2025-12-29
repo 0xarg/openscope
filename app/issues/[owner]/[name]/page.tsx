@@ -178,6 +178,7 @@ export default function Issues({
       ]);
     } finally {
       setIsLoading(false);
+      toast({ title: "Synced", description: "Everything is up to date" });
     }
   }, [params, fetchRepositoryIssues, fetchGithubRepoInfo, trackedIssue]);
 
@@ -230,16 +231,11 @@ export default function Issues({
   };
 
   const handleSync = () => {
-    setIsLoading(true);
     toast({
       title: "Syncing issues...",
       description: "Fetching latest data from GitHub",
     });
     loadPageData();
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({ title: "Synced", description: "Issues are up to date" });
-    }, 1500);
   };
 
   const filteredIssues = allIssues.filter((issue) => {
