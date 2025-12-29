@@ -98,14 +98,23 @@ export default function Repositories() {
 
   const handleUntrackRepo = useCallback(
     async (id: number) => {
+      let untrackedRepo: RepositoryDB | undefined;
+      setRepos((prev) => {
+        untrackedRepo = prev.find((repo) => repo.id === id);
+        toast({
+          title: "Untracking repository",
+          description: "Untracking may take few seconds",
+        });
+        return prev.filter((repo) => repo.id !== id);
+      });
       try {
         await axios.delete(`/api/repository/?id=${id}`);
         toast({
           title: "Untracked repository",
           description: "You are not tracking this repository anymore",
         });
-        setRepos((prev) => prev.filter((repo) => repo.id !== id));
       } catch (error) {
+        setRepos((prev) => (untrackedRepo ? [...prev, untrackedRepo] : prev));
         toast({
           title: "Internal Serever Error, Try again later",
           description: "Error while untracking repository",

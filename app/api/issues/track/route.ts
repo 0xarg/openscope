@@ -19,7 +19,9 @@ export async function POST(req: NextRequest) {
   const owner: string = data.owner;
 
   try {
-    const res = await axios.get(issue.repositoryAPIUrl);
+    const res = await axios.get(issue.repositoryAPIUrl, {
+      timeout: 10000,
+    });
     const repo: GitHubRepository = mapGitHubRepo(res.data);
     const user = await prisma.user.findUnique({
       where: {
@@ -77,7 +79,7 @@ Produce JSON with exactly these keys:
 
     let issueDb = await prisma.issue.findUnique({
       where: {
-        githubId: issue.githubId,
+        githubId: issue.githubId.toString(),
       },
     });
     const issueExists = !!issueDb;
@@ -101,7 +103,7 @@ Produce JSON with exactly these keys:
     if (!issueExists) {
       issueDb = await prisma.issue.create({
         data: {
-          githubId: issue.githubId,
+          githubId: issue.githubId.toString(),
           githubNumber: issue.number,
           githubUrl: issue.htmlUrl,
           githubApiUrl: issue.apiUrl,
