@@ -55,7 +55,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [languageFilter, setLanguageFilter] = useState("All");
   const [popularityFilter, setPopularityFilter] = useState("All");
-  const [trackedIds, setTrackedIds] = useState<string[]>(["1", "3"]);
+  const [trackedIds, setTrackedIds] = useState<string[]>([]);
   const [expandedAI, setExpandedAI] = useState<string[]>([]);
   const [allRepos, setAllRepos] = useState<GitHubRepository[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +75,16 @@ export default function Dashboard() {
     }
   }, []);
 
+  const fetchTrackedReposIds = useCallback(async () => {
+    try {
+      const res = await axios.get("/api/repository/tracked/ids");
+      // console.log(res.data);
+      setTrackedIds(res.data.trackedIds);
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
   const handleSync = () => {
     setIsLoading(true);
     toast({
@@ -87,8 +97,14 @@ export default function Dashboard() {
     });
   };
 
-  const handleAddRepo = useCallback(async (url: string, id: string) => {
-    const tracked = trackedIds.includes(id);
+  const handleAddRepo = useCallback(async (url: string, githubId: string) => {
+    const tracked = trackedIds.includes(githubId);
+    if (trackedIds.includes(githubId)) {
+      toast({
+        title: "Already tracking",
+        description: "Repository already tracked",
+      });
+    }
 
     try {
       axios
@@ -97,10 +113,7 @@ export default function Dashboard() {
         })
         .then((res) => {
           if (res.status === 201) {
-            toast({ title: tracked ? "Issue untracked" : "Issue tracked" });
-            setTrackedIds((prev) =>
-              tracked ? prev.filter((i) => i !== id) : [...prev, id]
-            );
+            setTrackedIds((prev) => [...prev, githubId]);
           }
         });
     } catch (error) {}
@@ -108,8 +121,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     setIsLoading(true);
+    fetchTrackedReposIds();
     fetchTrendingRepos();
-  }, [fetchTrendingRepos]);
+  }, []);
 
   const toggleAI = (id: string) => {
     setExpandedAI((prev) =>
@@ -245,17 +259,18 @@ export default function Dashboard() {
           ) : filteredRepos.length > 0 ? (
             <div className="divide-border/50 divide-y">
               {filteredRepos.map((repo) => {
-                const isExpanded = expandedAI.includes(repo.id.toString());
-                const isTracked = trackedIds.includes(repo.id.toString());
-
+                const isExpanded = expandedAI.includes(
+                  repo.githubId.toString()
+                );
+                const isTracked = trackedIds.includes(repo.githubId.toString());
                 return (
-                  <div key={repo.id} className="group">
+                  <div key={repo.githubId} className="group">
                     <div className="hover:bg-accent/5 grid grid-cols-12 items-center gap-4 px-6 py-4 transition-all duration-200">
                       {/* Repo */}
                       <div className="col-span-4 flex min-w-0 items-center gap-3">
                         <button
                           onClick={() =>
-                            handleAddRepo(repo.htmlUrl, repo.id.toString())
+                            handleAddRepo(repo.htmlUrl, repo.githubId)
                           }
                           className="hover:bg-accent/10 shrink-0 rounded-md p-1 transition-all hover:scale-110"
                         >
@@ -268,7 +283,7 @@ export default function Dashboard() {
                           />
                         </button>
                         <Link
-                          href={`/issue/${repo.id}`}
+                          href={`/issue/${repo.githubId}`}
                           className="hover:text-accent truncate text-sm font-medium transition-colors"
                         >
                           <span className="text-muted-foreground font-normal">
@@ -335,7 +350,7 @@ export default function Dashboard() {
                               ? "bg-accent/10 text-accent"
                               : "hover:bg-accent/10 hover:text-accent"
                           }`}
-                          onClick={() => toggleAI(repo.id.toString())}
+                          onClick={() => toggleAI(repo.githubId)}
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                         </Button>
@@ -383,7 +398,7 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <Link
-                            href={`/issue/${repo.id}`}
+                            href={`/issue/${repo.githubId}`}
                             className="text-accent group/link ml-auto flex items-center gap-1.5 font-medium hover:underline"
                           >
                             View details
@@ -438,17 +453,17 @@ export default function Dashboard() {
               ))
             : filteredRepos.length > 0
             ? filteredRepos.map((repo) => {
-                const isExpanded = expandedAI.includes(repo.id.toString());
-                const isTracked = trackedIds.includes(repo.id.toString());
+                const isExpanded = expandedAI.includes(repo.githubId);
+                const isTracked = trackedIds.includes(repo.githubId);
 
                 return (
                   <div
-                    key={repo.id}
+                    key={repo.githubId}
                     className="bg-card border-border hover:border-accent/30 rounded-2xl border p-5 shadow-sm transition-all"
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <Link
-                        href={`/issue/${repo.id}`}
+                        href={`/issue/${repo.githubId}`}
                         className="hover:text-accent font-medium transition-colors"
                       >
                         <span className="text-muted-foreground font-normal">
@@ -458,13 +473,13 @@ export default function Dashboard() {
                       </Link>
                       <button
                         onClick={() =>
-                          handleAddRepo(repo.htmlUrl, repo.id.toString())
+                          handleAddRepo(repo.htmlUrl, repo.githubId)
                         }
                         className="hover:bg-accent/10 rounded-lg p-1.5 transition-colors"
                       >
                         <Bookmark
                           className={`h-4 w-4 transition-colors ${
-                            isTracked
+                            trackedIds.includes(repo.githubId)
                               ? "text-accent fill-accent"
                               : "text-muted-foreground"
                           }`}
@@ -512,7 +527,7 @@ export default function Dashboard() {
                         className={`h-8 gap-1.5 rounded-full text-xs ${
                           isExpanded ? "bg-accent/10 text-accent" : ""
                         }`}
-                        onClick={() => toggleAI(repo.id.toString())}
+                        onClick={() => toggleAI(repo.githubId)}
                       >
                         <Sparkles className="h-3.5 w-3.5" />
                         AI
@@ -556,7 +571,7 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <Link
-                            href={`/issue/${repo.id}`}
+                            href={`/issue/${repo.githubId}`}
                             className="text-accent flex items-center justify-center gap-1.5 pt-2 font-medium"
                           >
                             View details

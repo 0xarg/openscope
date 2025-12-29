@@ -14,7 +14,7 @@ export function mapGitHubRepo(apiRepo: any): GitHubRepository {
     popularity = "New";
   }
   return {
-    id: apiRepo.id,
+    githubId: apiRepo.id,
     name: apiRepo.name,
     fullName: apiRepo.full_name,
     htmlUrl: apiRepo.html_url,

@@ -81,10 +81,10 @@ export default function Repositories() {
       title: "Syncing repositories...",
       description: "Fetching latest data from GitHub",
     });
-    setTimeout(() => {
+    fetchRepositories().then((res) => {
       setIsPageLoading(false);
       toast({ title: "Synced", description: "Repositories are up to date" });
-    }, 1500);
+    });
   };
 
   const filteredRepos = repos.filter(
@@ -144,21 +144,6 @@ export default function Repositories() {
     }
   }, []);
 
-  // const handleAddRepo = () => {
-  //   setIsLoading(true);
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //     setIsAddDialogOpen(false);
-  //     setRepoUrl("");
-  //     toast({
-  //       title: "Repository added",
-  //       description: "The repository has been added to your list.",
-  //     });
-  //   }, 1500);
-  // };
-
-  // const popularRepos = ["facebook/react", "vercel/next.js", "microsoft/vscode"];
-
   const trendingRepos = useCallback(async () => {
     const names = await filterTrendingRepo();
     if (names) {
@@ -169,8 +154,8 @@ export default function Repositories() {
   }, []);
 
   useEffect(() => {
-    trendingRepos();
     setIsPageLoading(true);
+    trendingRepos();
     fetchRepositories();
   }, []);
   return (
@@ -312,7 +297,7 @@ export default function Repositories() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredRepos.map((repo) => (
               <div
-                key={repo.id}
+                key={repo.owner}
                 className="group p-6 rounded-2xl bg-card border border-border shadow-sm hover:border-accent/30 hover:shadow-lg transition-all duration-300"
               >
                 {/* Header */}

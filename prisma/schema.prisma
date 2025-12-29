@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,14 +11,13 @@ model User {
   name          String
   email         String?      @unique
   emailVerified DateTime?
+  image         String?
   bio           String?
   skills        String[]
-  image         String?
-  repos         Repository[] @relation("UserRepos")
+  accounts      Account[]
+  sessions      Session[]
   issues        UserIssue[]
-
-  accounts Account[]
-  sessions Session[]
+  repos         Repository[] @relation("UserRepos")
 }
 
 model Account {
@@ -33,15 +26,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -63,79 +55,63 @@ model VerificationToken {
 }
 
 model Repository {
-  id          Int     @id @default(autoincrement())
-  githubUrl   String
-  name        String
-  owner       String
-  description String
-  language    String
-  stars       Int
-  forks       Int
-  issueCount  Int
-  issues      Issue[]
-  user        User[]  @relation("UserRepos")
+  id             Int     @id @default(autoincrement())
+  githubUrl      String
+  owner          String
+  name           String
+  description    String
+  forks          Int
+  issueCount     Int
+  language       String
+  stars          Int
+  githubId       String?
+  ownerAvatarUrl String?
+  issues         Issue[]
+  user           User[]  @relation("UserRepos")
 
   @@unique([name, owner], name: "name_owner")
 }
 
 model Issue {
-  id               Int    @id @default(autoincrement())
-  // --- GitHub identity ---
-  githubId         String // GitHub global issue ID
-  githubNumber     Int // Issue number within repo (#123)
-  githubUrl        String // htmlUrl
-  githubApiUrl     String // apiUrl
+  id               Int         @id @default(autoincrement())
+  githubUrl        String
+  repoId           Int
+  createdAt        DateTime    @default(now())
+  body             String?
+  githubId         String      @unique
+  title            String
+  ailabels         String[]
+  labels           String[]
+  commentsCount    Int         @default(0)
+  githubApiUrl     String
+  githubClosedAt   DateTime?
+  githubCreatedAt  DateTime
+  githubNumber     Int
+  githubUpdatedAt  DateTime
+  isPullRequest    Boolean     @default(false)
+  state            String
   repositoryAPIUrl String
+  repo             Repository  @relation(fields: [repoId], references: [id])
+  users            UserIssue[]
 
-  // --- Core issue content ---
-  title String
-  body  String?
-
-  state         String // "open" | "closed"
-  isPullRequest Boolean @default(false)
-  commentsCount Int     @default(0)
-
-  // --- Labels ---
-  labels   String[] // GitHub labels (names only)
-  ailabels String[] // AI-generated labels
-
-  // --- Relations ---
-  repoId Int
-  repo   Repository @relation(fields: [repoId], references: [id])
-
-  users UserIssue[]
-
-  // --- AI / enrichment ---
-
-  // --- Timestamps ---
-  githubCreatedAt DateTime
-  githubUpdatedAt DateTime
-  githubClosedAt  DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@unique([githubId])
   @@unique([repoId, githubNumber])
 }
 
 model UserIssue {
-  id Int @id @default(autoincrement())
-
-  userId  Int
-  issueId Int
-
-  user           User     @relation(fields: [userId], references: [id])
-  issue          Issue    @relation(fields: [issueId], references: [id])
-  summary        String?
-  difficulty     String?
-  skills         String[]
-  cause          String?
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  issueId        Int
+  notes          String?
+  createdAt      DateTime @default(now())
   approach       String?
   recommendation String?
+  cause          String?
+  difficulty     String?
+  skills         String[]
+  summary        String?
   status         String
-  notes          String?
-
-  createdAt DateTime @default(now())
+  issue          Issue    @relation(fields: [issueId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, issueId])
 }

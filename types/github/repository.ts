@@ -7,7 +7,7 @@ export interface GitHubRepoOwner {
 }
 
 export interface GitHubRepository {
-  id: number;
+  githubId: string;
   name: string;
   fullName: string;
   htmlUrl: string;

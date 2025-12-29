@@ -110,6 +110,8 @@ export async function POST(req: NextRequest) {
               name: repo.name,
               owner: repo.owner.login,
               githubUrl: repo.htmlUrl,
+              githubId: repo.githubId,
+              ownerAvatarUrl: repo.owner.avatarUrl,
               description: repo.description,
               language: repo.primaryLanguage,
               stars: repo.stars,
