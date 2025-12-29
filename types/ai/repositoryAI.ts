@@ -4,11 +4,13 @@ import { GitHubRepository } from "../github/repository";
 export interface RepositoryAIStats {
   summary?: string;
   match?: string;
-  contributorFriendly?: string[];
+  contributorFriendliness?: string;
   codeQuality?: string;
   activityLevel?: string;
   communityScore?: string;
-  recommendation?: string;
+  bestFor?: string[];
+  hotAreas?: string[];
+  techStack?: string[];
   generatedAt?: string;
   model?: string;
 }

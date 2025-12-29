@@ -24,39 +24,14 @@ import {
   FileCode,
   BookOpen,
   RefreshCw,
+  Bookmark,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RepositoryWithAI } from "@/types/ai/repositoryAI";
 import axios from "axios";
 import Link from "next/link";
 import { Skeleton } from "@/app/components/ui/skeleton";
-
-const aiInsight = {
-  summary:
-    "A highly active project with strong community engagement and consistent maintenance.",
-  contributorFriendliness: "high" as const,
-  activityLevel: "very active" as const,
-  codeQuality: 94,
-  communityScore: 91,
-  documentationQuality: "Excellent",
-  bestFor: [
-    "Learning modern development practices",
-    "Building production applications",
-    "Contributing to open source",
-  ],
-  gettingStarted: [
-    "1. Fork the repository and clone locally",
-    "2. Install dependencies with pnpm install",
-    "3. Read CONTRIBUTING.md for guidelines",
-    "4. Look for 'good first issue' labeled issues",
-  ],
-  hotAreas: [
-    "Performance optimization",
-    "Documentation improvements",
-    "Bug fixes",
-  ],
-  techStack: ["TypeScript", "Node.js", "Rollup", "esbuild"],
-};
+import { fetchGithubRepo } from "@/lib/utils/fetchGithubRepo";
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",
@@ -65,6 +40,13 @@ const languageColors: Record<string, string> = {
   Rust: "bg-orange-500",
   Go: "bg-cyan-500",
 };
+
+const gettingStarted = [
+  "1. Fork the repository and clone locally",
+  "2. Install dependencies with pnpm install",
+  "3. Read CONTRIBUTING.md for guidelines",
+  "4. Look for 'good first issue' labeled issues",
+];
 
 function formatNumber(num: number): string {
   if (num >= 1000) {
@@ -81,6 +63,15 @@ function formatDate(dateString: string): string {
   });
 }
 
+const getFriendlinessClass = (level: string) => {
+  const classes: Record<string, string> = {
+    high: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+    medium: "bg-amber-500/10 text-amber-500 border-amber-500/30",
+    low: "bg-rose-500/10 text-rose-500 border-rose-500/30",
+  };
+  return classes[level] || "";
+};
+
 export default function RepositoryDetail({
   params,
 }: {
@@ -89,36 +80,122 @@ export default function RepositoryDetail({
   const [showGettingStarted, setShowGettingStarted] = useState(true);
   const [repo, setRepo] = useState<RepositoryWithAI>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isAILoading, setIsAILoading] = useState<boolean>(false);
+  const [isTracked, setIsTracked] = useState<boolean>(false);
+
   const { toast } = useToast();
 
-  const fetchGithubRepository = useCallback(
-    async (owner: string, name: string) => {
-      try {
-        const res = await axios.get(
-          `/api/repository/info?owner=${owner}&name=${name}`
-        );
-        setRepo(res.data.repo);
-        console.log(res.data);
-      } catch (error) {
+  const fetchTrackedReposIds = useCallback(async () => {
+    try {
+      const res = await axios.get("/api/repository/tracked/ids");
+      const trackedIds: string[] = res.data.trackedIds;
+      if (repo) {
+        if (trackedIds.includes(repo?.githubId.toString())) {
+          setIsTracked(true);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  const fetchAIData = useCallback(async (repo: RepositoryWithAI) => {
+    try {
+      console.log(repo);
+      const res = await axios.post("/api/repository/ai/advance", {
+        repo,
+      });
+      const data = res.data;
+      setRepo({ ...repo, ai: { ...repo.ai, ...data.ai } });
+      setIsAILoading(false);
+    } catch (error) {
+      setIsAILoading(true);
+      toast({
+        title: "Unable to fetch AI insights",
+        description: "There was a error fetching AI insights",
+      });
+    }
+  }, []);
+  const handleTrackRepo = useCallback(
+    async (githubUrl: string) => {
+      let alreadyTracked = false;
+      setIsTracked(true);
+      if (alreadyTracked) {
         toast({
-          title: "Error getting repository info",
-          description: "Please try again after sometime",
+          title: "Already tracking",
+          description: "Repository already tracked",
         });
+        return;
+      }
+      try {
+        toast({
+          title: "Adding repository to tracking list",
+          description: "Adding may to take few seconds",
+        });
+        const res = await axios.post("/api/repository", {
+          githubUrl,
+        });
+
+        toast({
+          title: "Respository added",
+          description: "Sucessfully added repository to traking list",
+        });
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status;
+          switch (status) {
+            case 500:
+              setIsTracked(true);
+              toast({
+                title: "Something went wrong",
+                description: "Repository not added, please try again later.",
+              });
+              break;
+            case 501:
+              setIsTracked(true);
+              toast({
+                title: "Invalid Github Repository url",
+                description: "Repository URL not valid, please try again.",
+              });
+              break;
+            case 502:
+              toast({
+                title: "Repository already added",
+                description: "Repository exists in database.",
+              });
+              break;
+
+            default:
+              break;
+          }
+        }
       }
     },
-    []
+    [toast]
   );
 
   const loadPageData = useCallback(async () => {
     setIsLoading(true);
     try {
       const { owner, name } = await params;
-      await Promise.all([fetchGithubRepository(owner, name)]);
+      const res = await axios.get(
+        `/api/repository/info?owner=${owner}&name=${name}`
+      );
+      const fetchedRepo: RepositoryWithAI = res.data.repo;
+      setRepo(res.data.repo);
+      await fetchAIData(fetchedRepo);
+      await fetchTrackedReposIds();
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error getting repository info",
+        description: "Please try again after sometime",
+      });
     } finally {
       toast({ title: "Synced", description: "Everything is up to date" });
       setIsLoading(false);
     }
-  }, [fetchGithubRepository]);
+  }, [params, toast, fetchAIData, fetchTrackedReposIds]);
 
   const handleSync = () => {
     toast({
@@ -133,7 +210,9 @@ export default function RepositoryDetail({
   }, [loadPageData]);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(repo?.htmlUrl!);
+    if (repo) {
+      navigator.clipboard.writeText(repo?.htmlUrl);
+    }
     toast({
       title: "Link copied",
       description: "Repository URL copied to clipboard",
@@ -168,20 +247,42 @@ export default function RepositoryDetail({
               </span>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={handleSync}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-            <span className="hidden sm:inline">
-              {isLoading ? "Syncing..." : "Sync"}
-            </span>
-          </Button>
+          <div className="flex items-center gap-2">
+            {isLoading || !repo ? (
+              <Skeleton className="h-4 w-32" />
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 ${
+                  isTracked
+                    ? "text-accent"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => handleTrackRepo(repo?.htmlUrl)}
+                disabled={isLoading}
+                title={isTracked ? "Untrack repository" : "Track repository"}
+              >
+                <Bookmark
+                  className={`h-4 w-4 ${isTracked ? "fill-current" : ""}`}
+                />
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleSync}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
+              <span className="hidden sm:inline">
+                {isLoading ? "Syncing..." : "Sync"}
+              </span>
+            </Button>
+          </div>
         </div>
 
         {/* Main grid layout */}
@@ -190,7 +291,7 @@ export default function RepositoryDetail({
           <div className="lg:col-span-3 space-y-4 animate-slide-up">
             {/* Repo header card */}
             <div className="p-5 rounded-xl bg-card border border-border">
-              {isLoading ? (
+              {isLoading || !repo ? (
                 <>
                   <div className="flex items-start gap-4 mb-4">
                     <Skeleton className="h-14 w-14 rounded-xl shrink-0" />
@@ -222,7 +323,7 @@ export default function RepositoryDetail({
                 <>
                   <div className="flex items-start gap-4 mb-4">
                     <div className="h-14 w-14 rounded-full bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/0 flex items-center justify-center shrink-0">
-                      {repo?.owner.avatarUrl ? (
+                      {repo.owner.avatarUrl ? (
                         <img
                           src={repo.owner.avatarUrl}
                           className="rounded-full"
@@ -264,8 +365,7 @@ export default function RepositoryDetail({
                     <div className="flex items-center gap-2">
                       <div
                         className={`h-3 w-3 rounded-full ${
-                          languageColors[repo?.primaryLanguage!] ||
-                          "bg-gray-400"
+                          languageColors[repo.primaryLanguage] || "bg-gray-400"
                         }`}
                       />
                       <span className="font-medium text-foreground">
@@ -324,7 +424,7 @@ export default function RepositoryDetail({
                 <FileCode className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Repository Details</span>
               </div>
-              {isLoading ? (
+              {isLoading || !repo ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {[...Array(6)].map((_, i) => (
                     <div key={i} className="p-3 rounded-lg bg-muted/50">
@@ -341,7 +441,7 @@ export default function RepositoryDetail({
                     </p>
                     <p className="text-lg font-semibold flex items-center gap-2">
                       <Bug className="h-4 w-4 text-amber-500" />
-                      {repo?.openIssues}
+                      {repo.openIssues}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
@@ -350,21 +450,21 @@ export default function RepositoryDetail({
                     </p>
                     <p className="text-lg font-semibold flex items-center gap-2">
                       <GitPullRequest className="h-4 w-4 text-accent" />
-                      {repo?.openPrs}
+                      {repo.openPrs}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
                     <p className="text-xs text-muted-foreground mb-1">
                       License
                     </p>
-                    <p className="text-lg font-semibold">{repo?.license}</p>
+                    <p className="text-lg font-semibold">{repo.license}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
                     <p className="text-xs text-muted-foreground mb-1">
                       Created
                     </p>
                     <p className="text-sm font-medium">
-                      {formatDate(repo?.createdAt!)}
+                      {formatDate(repo.createdAt!)}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
@@ -372,7 +472,7 @@ export default function RepositoryDetail({
                       Last Updated
                     </p>
                     <p className="text-sm font-medium">
-                      {formatDate(repo?.updatedAt!)}
+                      {formatDate(repo.updatedAt!)}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
@@ -380,7 +480,7 @@ export default function RepositoryDetail({
                       Default Branch
                     </p>
                     <code className="text-sm font-mono text-accent">
-                      {repo?.defaultBranch}
+                      {repo.defaultBranch}
                     </code>
                   </div>
                 </div>
@@ -404,7 +504,7 @@ export default function RepositoryDetail({
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Lightbulb className="h-4 w-4 mr-2 text-accent" />
+                    <Lightbulb className="h-4 w-4 mr-2 text-emerald-500" />
                     Good First Issues
                   </a>
                 </Button>
@@ -459,7 +559,7 @@ export default function RepositoryDetail({
             {/* AI Insights Card */}
             <div className="rounded-xl ai-surface overflow-hidden animate-slide-in-right">
               <div className="p-5">
-                {isLoading ? (
+                {isAILoading || !repo?.ai ? (
                   <>
                     <div className="flex items-center gap-3 mb-4">
                       <Skeleton className="h-10 w-10 rounded-xl" />
@@ -533,13 +633,11 @@ export default function RepositoryDetail({
                         </p>
                         <Badge
                           variant="outline"
-                          className={`text-xs ${
-                            aiInsight.contributorFriendliness === "high"
-                              ? "text-accent border-accent/40 bg-accent/10"
-                              : "text-warning border-warning/40 bg-warning/10"
-                          }`}
+                          className={`text-xs ${getFriendlinessClass(
+                            repo.ai.contributorFriendliness ?? ""
+                          )}`}
                         >
-                          {aiInsight.contributorFriendliness}
+                          {repo.ai.contributorFriendliness}
                         </Badge>
                       </div>
                       <div className="p-3 rounded-lg bg-background/50">
@@ -547,7 +645,7 @@ export default function RepositoryDetail({
                           Activity Level
                         </p>
                         <span className="font-semibold text-sm capitalize">
-                          {aiInsight.activityLevel}
+                          {repo.ai.activityLevel}
                         </span>
                       </div>
                       <div className="p-3 rounded-lg bg-background/50">
@@ -555,7 +653,7 @@ export default function RepositoryDetail({
                           Code Quality
                         </p>
                         <span className="font-semibold text-sm">
-                          {aiInsight.codeQuality}%
+                          {repo.ai.codeQuality}%
                         </span>
                       </div>
                       <div className="p-3 rounded-lg bg-background/50">
@@ -563,7 +661,7 @@ export default function RepositoryDetail({
                           Community Score
                         </p>
                         <span className="font-semibold text-sm">
-                          {aiInsight.communityScore}%
+                          {repo.ai.communityScore}%
                         </span>
                       </div>
                     </div>
@@ -573,16 +671,18 @@ export default function RepositoryDetail({
                       <p className="text-xs text-muted-foreground mb-2">
                         Tech Stack
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {aiInsight.techStack.map((tech) => (
-                          <span
-                            key={tech}
-                            className="font-mono text-xs text-accent bg-accent/10 px-2 py-1 rounded-md border border-accent/20"
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
+                      {repo.ai.techStack && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {repo.ai.techStack.map((tech) => (
+                            <span
+                              key={tech}
+                              className="font-mono text-xs text-accent bg-accent/10 px-2 py-1 rounded-md border border-accent/20"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Summary */}
@@ -590,7 +690,7 @@ export default function RepositoryDetail({
                       <p className="text-xs text-muted-foreground mb-2">
                         Summary
                       </p>
-                      <p className="text-sm">{aiInsight.summary}</p>
+                      <p className="text-sm">{repo.ai.summary}</p>
                     </div>
 
                     {/* Best For */}
@@ -598,17 +698,19 @@ export default function RepositoryDetail({
                       <p className="text-xs text-muted-foreground mb-2">
                         Best For
                       </p>
-                      <ul className="space-y-1">
-                        {aiInsight.bestFor.map((item, i) => (
-                          <li
-                            key={i}
-                            className="text-sm text-muted-foreground flex items-start gap-2"
-                          >
-                            <span className="text-accent mt-0.5">•</span>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      {repo.ai.bestFor && (
+                        <ul className="space-y-1">
+                          {repo.ai.bestFor.map((item, i) => (
+                            <li
+                              key={i}
+                              className="text-sm text-muted-foreground flex items-start gap-2"
+                            >
+                              <span className="text-accent mt-0.5">•</span>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
 
                     {/* Hot Areas */}
@@ -616,17 +718,19 @@ export default function RepositoryDetail({
                       <p className="text-xs text-muted-foreground mb-2">
                         Hot Contribution Areas
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {aiInsight.hotAreas.map((area) => (
-                          <Badge
-                            key={area}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {area}
-                          </Badge>
-                        ))}
-                      </div>
+                      {repo.ai.hotAreas && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {repo.ai.hotAreas.map((area) => (
+                            <Badge
+                              key={area}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {area}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -651,7 +755,7 @@ export default function RepositoryDetail({
                 {showGettingStarted && (
                   <div className="px-5 pb-5 animate-fade-in">
                     <div className="space-y-2">
-                      {aiInsight.gettingStarted.map((step, i) => (
+                      {gettingStarted.map((step, i) => (
                         <p
                           key={i}
                           className="text-sm text-muted-foreground pl-4 border-l-2 border-accent/30"

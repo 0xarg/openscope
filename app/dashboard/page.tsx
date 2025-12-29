@@ -158,8 +158,34 @@ export default function Dashboard() {
           title: "Respository added",
           description: "Sucessfully added repository to traking list",
         });
-      } catch (error) {
-        setTrackedIds((prev) => prev.filter((id) => id !== githubId));
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status;
+          switch (status) {
+            case 500:
+              setTrackedIds((prev) => prev.filter((id) => id !== githubId));
+              toast({
+                title: "Something went wrong",
+                description: "Repository not added, please try again later.",
+              });
+              break;
+            case 501:
+              setTrackedIds((prev) => prev.filter((id) => id !== githubId));
+              toast({
+                title: "Invalid Github Repository url",
+                description: "Repository URL not valid, please try again.",
+              });
+              break;
+            case 502:
+              toast({
+                title: "Repository already added",
+                description: "Repository exists in database.",
+              });
+              break;
+            default:
+              break;
+          }
+        }
         toast({
           title: "Error tracking repository",
           description: "Unable to track repository now",
