@@ -1,32 +1,7 @@
 import { GitHubRepository } from "@/types/github/repository";
 import axios from "axios";
 
-export async function mapGitHubRepo(apiRepo: any): Promise<GitHubRepository> {
-  let issueCount = 0;
-  let prCount = 0;
-  if (apiRepo.owner && apiRepo.name) {
-    const res2 = await axios.get(
-      `https://api.github.com/search/issues?q=repo:${apiRepo.owner.login}/${apiRepo.name}+type:pr+state:open`,
-      {
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        },
-      }
-    );
-    const res3 = await axios.get(
-      `https://api.github.com/search/issues?q=repo:${apiRepo.owner.login}/${apiRepo.name}+type:issue+state:open`,
-      {
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        },
-      }
-    );
-    prCount = res2.data.total_count;
-    issueCount = res3.data.total_count;
-  }
-
+export function mapTrendingGitHubRepo(apiRepo: any): GitHubRepository {
   let popularity;
   if (apiRepo.stargazers_count > 150000) {
     popularity = "Legendary";
@@ -62,8 +37,7 @@ export async function mapGitHubRepo(apiRepo: any): Promise<GitHubRepository> {
     stars: apiRepo.stargazers_count,
     forks: apiRepo.forks_count,
     watchers: apiRepo.watchers_count,
-    openIssues: issueCount,
-    openPrs: prCount,
+    openIssues: apiRepo.open_issues_count,
     license: licenseName,
     defaultBranch: apiRepo.default_branch,
     createdAt: apiRepo.created_at,

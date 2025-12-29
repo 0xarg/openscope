@@ -364,7 +364,7 @@ export default function Repositories() {
                   </a> */}
                   <div className="flex items-center gap-1 shrink-0">
                     <Link
-                      href={`/repositories/${repo.id}`}
+                      href={`/repository/${repo.owner}/${repo.name}`}
                       className="p-2 rounded-lg hover:bg-accent/10 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
                       onClick={(e) => e.stopPropagation()}
                     >

@@ -9,11 +9,18 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await axios.get(
-      `https://api.github.com/repos/${owner}/${name}`
+      `https://api.github.com/repos/${owner}/${name}`,
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        },
+      }
     );
+
     return NextResponse.json(
       {
-        repo: mapGitHubRepo(res.data),
+        repo: await mapGitHubRepo(res.data),
       },
       { status: 200 }
     );

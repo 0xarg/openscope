@@ -114,7 +114,6 @@ export default function Dashboard() {
   const fetchTrackedReposIds = useCallback(async () => {
     try {
       const res = await axios.get("/api/repository/tracked/ids");
-      // console.log(res.data);
       setTrackedIds(res.data.trackedIds);
     } catch (error) {
       console.log(error);
@@ -174,7 +173,7 @@ export default function Dashboard() {
     setIsLoading(true);
     setExpandedAI("");
     try {
-      await Promise.all([fetchTrendingRepos(), fetchTrendingRepos()]);
+      await Promise.all([fetchTrendingRepos(), fetchTrackedReposIds()]);
     } finally {
       toast({ title: "Synced", description: "Everything is up to date" });
       setIsLoading(false);
@@ -476,7 +475,7 @@ export default function Dashboard() {
                           </div>
 
                           <Link
-                            href={`/issue/${repo.githubId}`}
+                            href={`/repository/${repo.owner.login}/${repo.name}`}
                             className="text-accent group/link ml-auto flex items-center gap-1.5 font-medium hover:underline"
                           >
                             View details

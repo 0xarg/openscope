@@ -7,7 +7,10 @@ export interface RepositoryDB {
   ownerAvatarUrl: string;
   description: string | "null";
   language: string | "unknown";
-  stars: number;
-  forks: number;
-  issueCount: number;
+  stars: number | 0;
+  forks: number | 0;
+  issueCount: number | 0;
+  prCount: number | 0;
+  license: string;
+  defaultBranch: string;
 }

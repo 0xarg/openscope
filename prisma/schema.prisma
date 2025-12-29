@@ -66,6 +66,9 @@ model Repository {
   stars          Int
   githubId       String?
   ownerAvatarUrl String?
+  prCount        Int?
+  license        String?
+  defaultBranch  String?
   issues         Issue[]
   user           User[]  @relation("UserRepos")
 

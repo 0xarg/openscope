@@ -1,4 +1,4 @@
-import { mapGitHubRepo } from "@/lib/utils/mapGithubRepo";
+import { mapTrendingGitHubRepo } from "@/lib/utils/mapTrendingGithubRepo";
 import { GitHubRepository } from "@/types/github/repository";
 import axios from "axios";
 import { NextResponse } from "next/server";
@@ -16,10 +16,11 @@ export async function GET() {
         },
       }
     );
+
     if (res.status !== 200) {
       throw new Error("Error fetching trending repos");
     }
-    const repos = res.data.items.map(mapGitHubRepo);
+    const repos = res.data.items.map(mapTrendingGitHubRepo);
 
     return NextResponse.json(
       {
@@ -28,6 +29,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       {
         message: error,
