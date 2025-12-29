@@ -185,6 +185,7 @@ export default function RepositoryDetail({
       setRepo(res.data.repo);
       await fetchAIData(fetchedRepo);
       await fetchTrackedReposIds();
+      toast({ title: "Synced", description: "Everything is up to date" });
     } catch (error) {
       console.error(error);
       toast({
@@ -192,7 +193,6 @@ export default function RepositoryDetail({
         description: "Please try again after sometime",
       });
     } finally {
-      toast({ title: "Synced", description: "Everything is up to date" });
       setIsLoading(false);
     }
   }, [params, toast, fetchAIData, fetchTrackedReposIds]);

@@ -104,17 +104,20 @@ model UserIssue {
   id             Int      @id @default(autoincrement())
   userId         Int
   issueId        Int
+  githubId       String
   notes          String?
-  createdAt      DateTime @default(now())
-  approach       String?
-  recommendation String?
-  cause          String?
+  summary        String?
   difficulty     String?
   skills         String[]
-  summary        String?
+  cause          String?
+  approach       String[]
+  estimatedTime  String?
+  matchScore     String
+  filestoExplore String[]
+  createdAt      DateTime @default(now())
   status         String
   issue          Issue    @relation(fields: [issueId], references: [id])
   user           User     @relation(fields: [userId], references: [id])
 
-  @@unique([userId, issueId])
+  @@unique([userId, issueId, githubId])
 }

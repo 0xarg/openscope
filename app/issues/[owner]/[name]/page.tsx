@@ -139,7 +139,7 @@ export default function Issues({
     setIsAILoading(true);
 
     try {
-      const res = await axios.post("/api/issues/ai/basic", {
+      const res = await axios.post("/api/issue/ai/basic", {
         issue,
       });
       const data = res.data;
@@ -530,7 +530,9 @@ export default function Issues({
                           className="h-8 text-xs gap-1 rounded-full"
                           asChild
                         >
-                          <Link href={`/issue/${issue.id}`}>
+                          <Link
+                            href={`/issue/${repoInfo?.owner.login}/${repoInfo?.name}/${issue.number}`}
+                          >
                             View
                             <ArrowRight className="h-3 w-3" />
                           </Link>
@@ -597,7 +599,7 @@ export default function Issues({
                             </div>
                           </div>
                           <Link
-                            href={`/issue/${issue.id}`}
+                            href={`/issue/${repoInfo?.owner.login}/${repoInfo?.name}/${issue.number}`}
                             className="ml-auto text-accent hover:underline flex items-center gap-1.5 font-medium group/link"
                           >
                             View details
@@ -770,7 +772,9 @@ export default function Issues({
                         className="w-full mt-3 gap-1.5 text-accent"
                         asChild
                       >
-                        <Link href={`/issue/${issue.id}`}>
+                        <Link
+                          href={`/issue/${repoInfo?.owner.login}/${repoInfo?.name}/${issue.number}`}
+                        >
                           View full details
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Link>

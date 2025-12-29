@@ -5,9 +5,10 @@ export interface IssueAIStats {
   difficulty?: string;
   skills?: string[];
   cause?: string;
-  approach?: string;
-  recommendation?: string;
+  approach?: string[];
   estimatedTime?: string;
+  filestoExplore?: string[];
+  matchScore?: string;
 
   generatedAt?: string;
   model?: string;
