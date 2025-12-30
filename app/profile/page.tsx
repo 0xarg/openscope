@@ -31,6 +31,7 @@ import {
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserDb } from "@/types/database/user/user";
+import { formatDate } from "date-fns";
 
 const userData = {
   name: "Alex Developer",
@@ -259,18 +260,20 @@ export default function Profile() {
                           <p>{user.name.charAt(0)}</p>
                         )}
                       </div>
-                      <Badge variant="outline" className="mt-3 text-xs">
-                        {
-                          experienceLevels.find(
-                            (l) => l.value === user.experienceLevel
-                          )?.icon
-                        }
-                        {
-                          experienceLevels.find(
-                            (l) => l.value === user.experienceLevel
-                          )?.label
-                        }
-                      </Badge>
+                      {user.experienceLevel && (
+                        <Badge variant="outline" className="mt-3 text-xs">
+                          {
+                            experienceLevels.find(
+                              (l) => l.value === user.experienceLevel
+                            )?.icon
+                          }
+                          {
+                            experienceLevels.find(
+                              (l) => l.value === user.experienceLevel
+                            )?.label
+                          }
+                        </Badge>
+                      )}
                     </div>
 
                     {/* Profile Info */}
@@ -351,55 +354,50 @@ export default function Profile() {
                       </div>
 
                       {/* Meta info */}
-                      <DisabledOverlay reason="location section under devlopment">
-                        <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t text-sm text-muted-foreground justify-center sm:justify-start">
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5" />
-                            {isEditing ? (
-                              <Input
-                                value={"profile.location"}
-                                onChange={(e) =>
-                                  setProfile({
-                                    ...profile,
-                                    location: e.target.value,
-                                  })
-                                }
-                                className="h-7 w-28 text-xs"
-                              />
-                            ) : (
-                              "profile.location"
-                            )}
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <LinkIcon className="h-3.5 w-3.5" />
-                            {isEditing ? (
-                              <Input
-                                value={profile.website}
-                                onChange={(e) =>
-                                  setProfile({
-                                    ...profile,
-                                    website: e.target.value,
-                                  })
-                                }
-                                className="h-7 w-36 text-xs"
-                              />
-                            ) : (
-                              <a
-                                href={profile.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-accent transition-colors"
-                              >
-                                {profile.website}
-                              </a>
-                            )}
-                          </span>
+                      <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t text-sm text-muted-foreground justify-center sm:justify-start">
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {isEditing ? (
+                            <Input
+                              value={user.location}
+                              disabled={true}
+                              className="h-7 w-28 text-xs"
+                            />
+                          ) : (
+                            user.location
+                          )}
+                        </span>
+                        {/* <span className="flex items-center gap-1.5">
+                          <LinkIcon className="h-3.5 w-3.5" />
+                          {isEditing ? (
+                            <Input
+                              value={profile.website}
+                              onChange={(e) =>
+                                setProfile({
+                                  ...profile,
+                                  website: e.target.value,
+                                })
+                              }
+                              className="h-7 w-36 text-xs"
+                            />
+                          ) : (
+                            <a
+                              href={profile.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-accent transition-colors"
+                            >
+                              {profile.website}
+                            </a>
+                          )}
+                        </span> */}
+                        {user.githubJoined && (
                           <span className="flex items-center gap-1.5">
                             <Calendar className="h-3.5 w-3.5" />
-                            Joined {profile.joinedDate}
+                            Joined {new Date(user.githubJoined).toDateString()}
                           </span>
-                        </div>
-                      </DisabledOverlay>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

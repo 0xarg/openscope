@@ -195,16 +195,28 @@ export default function Dashboard() {
     [toast]
   );
 
+  const userGithubSync = useCallback(async () => {
+    try {
+      await axios.get("/api/user/github/sync");
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
   const loadPageData = useCallback(async () => {
     setIsLoading(true);
     setExpandedAI("");
     try {
-      await Promise.all([fetchTrendingRepos(), fetchTrackedReposIds()]);
+      await Promise.all([
+        fetchTrendingRepos(),
+        fetchTrackedReposIds(),
+        userGithubSync(),
+      ]);
     } finally {
       toast({ title: "Synced", description: "Everything is up to date" });
       setIsLoading(false);
     }
-  }, [fetchTrackedReposIds, fetchTrendingRepos]);
+  }, [fetchTrackedReposIds, fetchTrendingRepos, userGithubSync, toast]);
 
   const getMatchClass = (difficulty: string) => {
     console.log(difficulty);

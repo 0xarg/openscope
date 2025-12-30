@@ -13,7 +13,7 @@ model User {
   emailVerified   DateTime?
   githubUsername  String       @unique
   image           String?
-  githubJoined    DateTime
+  githubJoined    DateTime?
   location        String?
   bio             String?
   skills          String[]
