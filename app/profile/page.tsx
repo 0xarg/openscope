@@ -1,11 +1,13 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DisabledOverlay } from "../components/devlens/DisabledOverlay";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
@@ -18,20 +20,17 @@ import {
   X,
   Calendar,
   GitPullRequest,
-  Award,
-  TrendingUp,
   Target,
-  Flame,
-  Star,
   GitCommit,
-  Users,
-  Zap,
-  Trophy,
-  Code2,
-  Heart,
+  TrendingUp,
+  Star,
+  ExternalLink,
+  User,
+  RefreshCw,
 } from "lucide-react";
-import { User } from "@/types/database/user/user";
 import axios from "axios";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UserDb } from "@/types/database/user/user";
 
 const userData = {
   name: "Alex Developer",
@@ -61,21 +60,18 @@ const experienceLevels = [
     label: "Beginner",
     icon: "🌱",
     desc: "Just getting started",
-    color: "from-emerald-500/20 to-green-500/20",
   },
   {
     value: "intermediate",
     label: "Intermediate",
     icon: "🌿",
     desc: "Some experience",
-    color: "from-blue-500/20 to-cyan-500/20",
   },
   {
     value: "advanced",
     label: "Advanced",
     icon: "🌳",
     desc: "Seasoned contributor",
-    color: "from-violet-500/20 to-purple-500/20",
   },
 ];
 
@@ -96,575 +92,579 @@ const allInterests = [
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<User>();
-  const [selectedInterests, setSelectedInterests] = useState(
-    userData.interests
-  );
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [profile, setProfile] = useState(userData);
+  const [user, setUser] = useState<UserDb>();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const fetechUserDetails = useCallback(async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const res = await axios.get("/api/user");
-      setProfile(res.data.user);
-      console.log(res.data);
+      const fetchedUser: UserDb = res.data.user;
+      console.log(fetchedUser);
+      setUser(fetchedUser);
+      setSelectedInterests(fetchedUser.skills);
     } catch (error) {
+      console.log(error);
       toast({
-        title: "Error fetching user details",
+        title: "Error getting user information",
+        description: "Unable to fetch user information at the moment ",
       });
     }
-  }, []);
+  }, [toast]);
 
-  useEffect(() => {
-    fetechUserDetails();
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+  const loadPageData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await fetchUser();
+    } catch (error) {
+      toast({
+        title: "Unable to load data",
+        description: "There is problem at our server, please try again later",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchUser]);
+
+  const handleSave = useCallback(async () => {
+    if (!user) {
+      toast({
+        title: "Unable save information",
+        description: "Error getting user information, try again later",
+      });
+      return;
+    }
+    const prevUser = user;
+    const updatedUser = {
+      ...user,
+      skills: selectedInterests,
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
-  const handleSave = () => {
-    // setProfile({ ...profile, interests: selectedInterests });
-    setIsEditing(false);
-    toast({
-      title: "Profile saved",
-      description: "Your changes have been saved.",
-    });
+    setUser(updatedUser);
+    try {
+      const res = await axios.post("/api/user", {
+        updatedUser,
+      });
+      toast({
+        title: "Profile saved",
+        description: "Your changes have been saved.",
+      });
+    } catch (error) {
+      setUser(prevUser);
+      toast({
+        title: "User details updated",
+        description: "Your details have been updated sucessfully",
+      });
+    } finally {
+      setIsEditing(false);
+    }
+  }, [toast, user, selectedInterests]);
+
+  const handleSync = async () => {
+    loadPageData();
   };
 
+  useEffect(() => {
+    loadPageData();
+  }, [loadPageData]);
+
   const stats = [
-    {
-      icon: Target,
-      label: "Tracked",
-      value: "dum1",
-      color: "from-blue-500 to-cyan-500",
-      bgColor: "from-blue-500/20 to-cyan-500/20",
-    },
+    { icon: Target, label: "Tracked", value: profile.stats.tracked },
     {
       icon: GitPullRequest,
       label: "PRs Merged",
-      value: "dm2",
-      color: "from-accent to-emerald-500",
-      bgColor: "from-accent/20 to-emerald-500/20",
+      value: profile.stats.prsMerged,
     },
-    {
-      icon: Flame,
-      label: "Day Streak",
-      value: "dm3",
-      color: "from-orange-500 to-amber-500",
-      bgColor: "from-orange-500/20 to-amber-500/20",
-    },
-    {
-      icon: GitCommit,
-      label: "Commits",
-      value: "dm4",
-      color: "from-violet-500 to-purple-500",
-      bgColor: "from-violet-500/20 to-purple-500/20",
-    },
+    { icon: GitCommit, label: "Commits", value: profile.stats.contributions },
+    { icon: Star, label: "Stars", value: profile.stats.totalStars },
   ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  };
 
   return (
     <AppLayout>
-      <div className="relative min-h-screen overflow-hidden">
-        {/* Background Effects */}
-        <div className="fixed inset-0 pointer-events-none">
-          {/* Mouse-following glow */}
-          <div
-            className="absolute w-[600px] h-[600px] rounded-full opacity-20 blur-[120px] transition-all duration-500 ease-out"
-            style={{
-              background:
-                "radial-gradient(circle, hsl(var(--accent)) 0%, transparent 70%)",
-              left: mousePosition.x - 300,
-              top: mousePosition.y - 300,
-            }}
-          />
-
-          {/* Static orbs */}
-          <div className="absolute top-40 left-20 w-80 h-80 rounded-full bg-violet-500/10 blur-[100px] animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-accent/10 blur-[120px]" />
-
-          {/* Grid pattern */}
-          <div className="absolute inset-0 grid-pattern opacity-30" />
-        </div>
-
-        <div className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-          {/* Profile Header */}
+      <div className="min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+          {/* Page Header */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative mb-8"
+            transition={{ duration: 0.3 }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
-            <div className="relative p-6 lg:p-8 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden">
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-violet-500/5 to-transparent pointer-events-none" />
-
-              <div className="relative flex flex-col lg:flex-row gap-6 lg:gap-8">
-                {/* Avatar Section */}
-                <div className="flex flex-col items-center lg:items-start">
-                  <div className="relative group">
-                    <div className="h-28 w-28 lg:h-32 lg:w-32 rounded-full bg-gradient-to-br from-accent via-violet-500 to-purple-600 flex items-center justify-center text-4xl lg:text-5xl font-bold text-white shadow-2xl shadow-accent/30">
-                      {/* {profile?.name} */}
-                      <img
-                        src={profile?.image!}
-                        alt=""
-                        className="rounded-full"
-                      />
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-success flex items-center justify-center border-4 border-background">
-                      <Zap className="h-4 w-4 text-white" />
-                    </div>
-                    {/* Glow effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent to-violet-500 opacity-0 group-hover:opacity-30 blur-xl transition-opacity" />
-                  </div>
-
-                  {/* Experience Badge */}
-                  <div className="mt-4 px-4 py-2 rounded-full bg-gradient-to-r from-accent/20 to-violet-500/20 border border-accent/30">
-                    <span className="text-sm font-medium">
-                      {
-                        experienceLevels.find((l) => l.value === "begginer")
-                          ?.icon
-                      }{" "}
-                      {
-                        experienceLevels.find((l) => l.value === "begginer")
-                          ?.label
-                      }
-                    </span>
-                  </div>
-                </div>
-
-                {/* Profile Info */}
-                <div className="flex-1 text-center lg:text-left">
-                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                    <div className="flex-1">
-                      {isEditing ? (
-                        <div className="space-y-4 max-w-md mx-auto lg:mx-0">
-                          <Input
-                            value={profile?.name}
-                            // onChange={(e) =>
-                            //   setProfile({ ...profile, name: e.target.value })
-                            // }
-                            placeholder="Name"
-                            className="text-xl font-bold bg-background/50"
-                          />
-                          <Input
-                            value={profile?.email!}
-                            // onChange={(e) =>
-                            //   setProfile({ ...profile, email: e.target.value })
-                            // }
-                            placeholder="Email"
-                            type="email"
-                            className="bg-background/50"
-                          />
-                          <Textarea
-                            value={profile?.bio!}
-                            // onChange={(e) =>
-                            //   setProfile({ ...profile, bio: e.target.value })
-                            // }
-                            placeholder="Bio"
-                            rows={3}
-                            className="bg-background/50"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
-                            {profile?.name}
-                          </h1>
-                          {/* <p className="text-muted-foreground mt-1 font-mono">
-                            @{profile?.}
-                          </p> */}
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {profile?.email}
-                          </p>
-                          <p className="text-muted-foreground mt-4 max-w-xl">
-                            {profile?.bio}
-                          </p>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 justify-center lg:justify-end">
-                      {!isEditing ? (
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Button
-                            onClick={() => setIsEditing(true)}
-                            variant="outline"
-                            className="gap-2 bg-background/50"
-                          >
-                            <Edit2 className="h-4 w-4" /> Edit Profile
-                          </Button>
-                        </motion.div>
-                      ) : (
-                        <>
-                          <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <Button
-                              variant="ghost"
-                              onClick={() => setIsEditing(false)}
-                              className="gap-2"
-                            >
-                              <X className="h-4 w-4" /> Cancel
-                            </Button>
-                          </motion.div>
-                          <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <Button
-                              onClick={handleSave}
-                              className="gap-2 bg-gradient-to-r from-accent to-accent/80"
-                            >
-                              <Save className="h-4 w-4" /> Save
-                            </Button>
-                          </motion.div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Meta info */}
-                  <div className="flex flex-wrap gap-4 mt-6 pt-6 border-t border-border/50 text-sm text-muted-foreground justify-center lg:justify-start">
-                    <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
-                      <MapPin className="h-4 w-4 text-accent" />
-                      {isEditing ? (
-                        <Input
-                          value={"location"}
-                          // onChange={(e) =>
-                          //   setProfile({ ...profile, location: e.target.value })
-                          // }
-                          className="h-7 w-32 text-xs bg-background/50"
-                        />
-                      ) : (
-                        " profile.location"
-                      )}
-                    </span>
-                    <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
-                      <LinkIcon className="h-4 w-4 text-accent" />
-                      {isEditing ? (
-                        <Input
-                          value={"profile.website"}
-                          // onChange={(e) =>
-                          //   setProfile({ ...profile, website: e.target.value })
-                          // }
-                          className="h-7 w-40 text-xs bg-background/50"
-                        />
-                      ) : (
-                        <a
-                          href={"/"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:text-accent transition-colors"
-                        >
-                          {"profile.website"}
-                        </a>
-                      )}
-                    </span>
-                    <span className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
-                      <Calendar className="h-4 w-4 text-accent" />
-                      Joined {"profile.joinedDate"}
-                    </span>
-                  </div>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                <User className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Profile</h1>
+                <p className="text-sm text-muted-foreground">
+                  Manage your account
+                </p>
               </div>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleSync}
+              disabled={isSyncing || isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
+              />
+              {isSyncing ? "Syncing..." : "Sync"}
+            </Button>
           </motion.div>
 
-          {/* Stats Grid */}
+          {/* Profile Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+            transition={{ delay: 0.1 }}
           >
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ scale: 1.02, y: -2 }}
-                className={cn(
-                  "relative p-5 rounded-xl border border-border/50 backdrop-blur-sm overflow-hidden group",
-                  "bg-gradient-to-br",
-                  stat.bgColor
+            <Card>
+              <CardContent className="p-6">
+                {isLoading || !user ? (
+                  <div className="flex flex-col sm:flex-row gap-6">
+                    <div className="flex flex-col items-center sm:items-start">
+                      <Skeleton className="h-24 w-24 rounded-xl" />
+                      <Skeleton className="h-5 w-24 mt-3 rounded-full" />
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <Skeleton className="h-7 w-48" />
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-full max-w-md" />
+                      <div className="flex gap-3 pt-4">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-28" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-6">
+                    {/* Avatar */}
+                    <div className="flex flex-col items-center sm:items-start">
+                      <div className="h-24 w-24 rounded-full bg-accent/10 border border-accent/0 flex items-center justify-center text-3xl font-bold text-accent">
+                        {user.image ? (
+                          <img
+                            src={user.image}
+                            className="rounded-full"
+                            alt=""
+                          />
+                        ) : (
+                          <p>{user.name.charAt(0)}</p>
+                        )}
+                      </div>
+                      <Badge variant="outline" className="mt-3 text-xs">
+                        {
+                          experienceLevels.find(
+                            (l) => l.value === user.experienceLevel
+                          )?.icon
+                        }
+                        {
+                          experienceLevels.find(
+                            (l) => l.value === user.experienceLevel
+                          )?.label
+                        }
+                      </Badge>
+                    </div>
+
+                    {/* Profile Info */}
+                    <div className="flex-1 text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="flex-1 space-y-1">
+                          {isEditing ? (
+                            <div className="space-y-3 max-w-md mx-auto sm:mx-0">
+                              <Input
+                                disabled={true}
+                                value={user.name}
+                                placeholder="Name"
+                                className="text-lg font-semibold"
+                              />
+                              <Input
+                                value={profile.email}
+                                disabled={true}
+                                placeholder="Email"
+                                type="email"
+                              />
+                              <Textarea
+                                value={user.bio ?? ""}
+                                onChange={(e) =>
+                                  setUser({
+                                    ...user,
+                                    bio: e.target.value,
+                                  })
+                                }
+                                placeholder="Bio"
+                                rows={2}
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <h1 className="text-2xl font-bold">
+                                {user.name}
+                              </h1>
+                              <p className="text-muted-foreground text-sm font-mono">
+                                @{user.githubUsername}
+                              </p>
+                              <p className="text-muted-foreground text-sm mt-2">
+                                {user.bio}
+                              </p>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 justify-center sm:justify-end shrink-0">
+                          {!isEditing ? (
+                            <Button
+                              onClick={() => setIsEditing(true)}
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <Edit2 className="h-4 w-4" /> Edit
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsEditing(false)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                onClick={handleSave}
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <Save className="h-4 w-4" /> Save
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Meta info */}
+                      <DisabledOverlay reason="location section under devlopment">
+                        <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t text-sm text-muted-foreground justify-center sm:justify-start">
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {isEditing ? (
+                              <Input
+                                value={"profile.location"}
+                                onChange={(e) =>
+                                  setProfile({
+                                    ...profile,
+                                    location: e.target.value,
+                                  })
+                                }
+                                className="h-7 w-28 text-xs"
+                              />
+                            ) : (
+                              "profile.location"
+                            )}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <LinkIcon className="h-3.5 w-3.5" />
+                            {isEditing ? (
+                              <Input
+                                value={profile.website}
+                                onChange={(e) =>
+                                  setProfile({
+                                    ...profile,
+                                    website: e.target.value,
+                                  })
+                                }
+                                className="h-7 w-36 text-xs"
+                              />
+                            ) : (
+                              <a
+                                href={profile.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-accent transition-colors"
+                              >
+                                {profile.website}
+                              </a>
+                            )}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" />
+                            Joined {profile.joinedDate}
+                          </span>
+                        </div>
+                      </DisabledOverlay>
+                    </div>
+                  </div>
                 )}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div
-                  className={cn(
-                    "h-10 w-10 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3",
-                    stat.color
-                  )}
-                >
-                  <stat.icon className="h-5 w-5 text-white" />
-                </div>
-                <p className="text-3xl font-bold">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </motion.div>
-            ))}
+              </CardContent>
+            </Card>
           </motion.div>
 
+          {/* Stats */}
           <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3"
           >
+            {isLoading || !user
+              ? [...Array(4)].map((_, i) => (
+                  <Card key={i} className="h-full">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-6 w-12" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              : stats.map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <DisabledOverlay reason="under development">
+                      <Card className="h-full">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+                              <stat.icon className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-2xl font-bold">{stat.value}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {stat.label}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </DisabledOverlay>
+                  </motion.div>
+                ))}
+          </motion.div>
+
+          <div className="grid lg:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Experience Level */}
-              <motion.div variants={itemVariants}>
-                <div className="p-6 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent pointer-events-none" />
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                        <Trophy className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-lg">
-                        Experience Level
-                      </h3>
-                    </div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base font-medium">
+                      Experience Level
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {experienceLevels.map((level) => (
-                        <motion.button
+                        <button
                           key={level.value}
-                          whileHover={{ scale: isEditing ? 1.02 : 1 }}
-                          whileTap={{ scale: isEditing ? 0.98 : 1 }}
-                          // onClick={() =>
-                          //   isEditing &&
-                          //   setProfile({
-                          //     ...profile,
-                          //     experienceLevel: level.value,
-                          //   })
-                          // }
+                          onClick={() =>
+                            isEditing &&
+                            user &&
+                            setUser({
+                              ...user,
+                              experienceLevel: level.value,
+                            })
+                          }
+                          disabled={!isEditing}
                           className={cn(
-                            "p-5 rounded-xl border text-center transition-all bg-gradient-to-br",
-                            level.color,
-                            "profile.experienceLevel" === level.value
-                              ? "border-accent ring-2 ring-accent/20 shadow-lg"
-                              : "border-border/50 hover:border-accent/50",
+                            "p-4 rounded-lg border text-center transition-all",
+                            user?.experienceLevel === level.value
+                              ? "border-accent bg-accent/5"
+                              : "border-border hover:border-muted-foreground/50",
                             !isEditing &&
-                              " profile.experienceLevel" !== level.value &&
+                              user?.experienceLevel !== level.value &&
                               "opacity-50",
-                            isEditing && "cursor-pointer"
+                            isEditing && "cursor-pointer hover:bg-muted/50"
                           )}
                         >
-                          <div className="text-3xl mb-2">{level.icon}</div>
-                          <p className="font-semibold">{level.label}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <div className="text-2xl mb-1">{level.icon}</div>
+                          <p className="font-medium text-sm">{level.label}</p>
+                          <p className="text-xs text-muted-foreground">
                             {level.desc}
                           </p>
-                        </motion.button>
+                        </button>
                       ))}
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </motion.div>
 
               {/* Skills & Interests */}
-              <motion.div variants={itemVariants}>
-                <div className="p-6 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none" />
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-accent to-emerald-500 flex items-center justify-center">
-                        <Code2 className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-lg">
-                        Skills & Interests
-                      </h3>
-                    </div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base font-medium">
+                      Skills & Interests
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="flex flex-wrap gap-2">
                       {allInterests.map((interest) => (
-                        <motion.div
+                        <Badge
                           key={interest}
-                          whileHover={{ scale: isEditing ? 1.05 : 1 }}
-                          whileTap={{ scale: isEditing ? 0.95 : 1 }}
+                          variant={
+                            selectedInterests.includes(interest)
+                              ? "default"
+                              : "outline"
+                          }
+                          className={cn(
+                            "text-sm px-3 py-1.5 transition-all",
+                            !isEditing && "cursor-default",
+                            isEditing && "cursor-pointer",
+                            selectedInterests.includes(interest) &&
+                              "bg-accent hover:bg-accent/90"
+                          )}
+                          onClick={() =>
+                            isEditing &&
+                            setSelectedInterests((prev) =>
+                              prev.includes(interest)
+                                ? prev.filter((x) => x !== interest)
+                                : [...prev, interest]
+                            )
+                          }
                         >
-                          <Badge
-                            variant={
-                              selectedInterests.includes(interest)
-                                ? "default"
-                                : "outline"
-                            }
-                            className={cn(
-                              "cursor-pointer text-sm px-4 py-2 transition-all",
-                              !isEditing && "cursor-default",
-                              selectedInterests.includes(interest)
-                                ? "bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 shadow-lg shadow-accent/20"
-                                : "hover:border-accent/50 bg-background/50"
-                            )}
-                            onClick={() =>
-                              isEditing &&
-                              setSelectedInterests((prev) =>
-                                prev.includes(interest)
-                                  ? prev.filter((x) => x !== interest)
-                                  : [...prev, interest]
-                              )
-                            }
-                          >
-                            {interest}
-                          </Badge>
-                        </motion.div>
+                          {interest}
+                        </Badge>
                       ))}
                     </div>
                     {isEditing && (
-                      <p className="text-xs text-muted-foreground mt-4">
-                        Click to toggle interests. Selected:{" "}
-                        {selectedInterests.length}
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Click to toggle • Selected: {selectedInterests.length}
                       </p>
                     )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Contribution Summary */}
-              <motion.div variants={itemVariants}>
-                <div className="p-6 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="font-semibold">Contributions</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          icon: Target,
-                          label: "Issues Tracked",
-                          value: "profile.stats.tracked",
-                        },
-                        {
-                          icon: GitPullRequest,
-                          label: "PRs Opened",
-                          value: "profile.stats.prsOpened",
-                        },
-                        {
-                          icon: Award,
-                          label: "PRs Merged",
-                          value: "profile.stats.prsMerged",
-                        },
-                        {
-                          icon: Star,
-                          label: "Stars Earned",
-                          value: "profile.stats.totalStars",
-                        },
-                        {
-                          icon: Users,
-                          label: "Repos Following",
-                          value: "profile.stats.repos",
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                        >
-                          <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <item.icon className="h-4 w-4" />
-                            {item.label}
-                          </span>
-                          <span className="font-bold">{item.value}</span>
-                        </div>
-                      ))}
-                    </div>
+              {/* Contributions */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-base font-medium">
+                      Activity
+                    </CardTitle>
                   </div>
-                </div>
-              </motion.div>
-
-              {/* AI Personalization */}
-              <motion.div variants={itemVariants}>
-                <div className="relative p-6 rounded-xl overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-violet-500/10 to-transparent" />
-                  <div className="absolute inset-0 ai-surface" />
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-accent to-violet-500 flex items-center justify-center">
-                        <Sparkles className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="font-semibold">AI Personalization</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Your profile and interests help us recommend the perfect
-                      issues for your skill level.
-                    </p>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          Match accuracy
+                </CardHeader>
+                <DisabledOverlay reason="Under Development">
+                  <CardContent className="space-y-2">
+                    {[
+                      { label: "Issues Tracked", value: profile.stats.tracked },
+                      { label: "PRs Opened", value: profile.stats.prsOpened },
+                      { label: "PRs Merged", value: profile.stats.prsMerged },
+                      { label: "Repos Following", value: profile.stats.repos },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between py-2 border-b last:border-0"
+                      >
+                        <span className="text-sm text-muted-foreground">
+                          {item.label}
                         </span>
-                        <span className="font-medium text-accent">94%</span>
+                        <span className="font-semibold">{item.value}</span>
                       </div>
-                      <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                        <div className="h-full w-[94%] rounded-full bg-gradient-to-r from-accent to-violet-500" />
+                    ))}
+                  </CardContent>
+                </DisabledOverlay>
+              </Card>
+
+              {/* AI Match */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="border-accent/20 bg-accent/5">
+                  <DisabledOverlay reason="Under development">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="h-4 w-4 text-accent" />
+                        <span className="font-medium text-sm">
+                          AI Personalization
+                        </span>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs pt-3 border-t border-border/30">
-                      <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-                      <span className="text-success font-medium">
-                        Active & Learning
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Your profile helps us recommend issues for your skill
+                        level.
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            Match accuracy
+                          </span>
+                          <span className="font-medium text-accent">94%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full w-[94%] rounded-full bg-accent" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </DisabledOverlay>
+                </Card>
               </motion.div>
 
-              {/* Connected Accounts */}
-              <motion.div variants={itemVariants}>
-                <div className="p-6 rounded-xl bg-card/80 backdrop-blur-sm border border-border/50">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
-                      <Heart className="h-5 w-5 text-white" />
+              {/* Connected Account */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+              >
+                <Card>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base font-medium">
+                      Connected Account
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <div className="h-9 w-9 rounded-lg bg-background flex items-center justify-center border">
+                        <Github className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">GitHub</p>
+                        <p className="text-xs text-muted-foreground font-mono truncate">
+                          @{profile.username}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
-                    <h3 className="font-semibold">Connected</h3>
-                  </div>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-muted/80 to-muted/40 border border-border/30"
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-background flex items-center justify-center">
-                      <Github className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">GitHub</p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        @{profile?.name}
-                      </p>
-                    </div>
-                    <Badge className="text-xs bg-accent/20 text-accent border-accent/40">
-                      Connected
-                    </Badge>
-                  </motion.div>
-                </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </AppLayout>

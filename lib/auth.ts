@@ -10,6 +10,15 @@ export const authOptions: NextAuthOptions = {
     Github({
       clientId: process.env.GITHUB_ID ?? "",
       clientSecret: process.env.GITHUB_SECRET ?? "",
+      profile(profile) {
+        return {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          image: profile.avatar_url,
+          githubUsername: profile.login,
+        };
+      },
     }),
   ],
 
@@ -21,9 +30,12 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, profile }) {
       if (user) {
         token.id = Number(user.id);
+      }
+      if (profile && "login" in profile) {
+        token.githubUsername = String(profile.login);
       }
       return token;
     },
@@ -31,6 +43,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id; // expose id in session
+        session.user.githubUsername = token.githubUsername as string;
       }
       return session;
     },

@@ -24,53 +24,6 @@ import {
 import Link from "next/link";
 import axios from "axios";
 import { UserIssues } from "@/types/database/github/userIssues";
-// interface TrackedIssue {
-//   id: string;
-//   title: string;
-//   repo: string;
-//   repoOwner: string;
-//   labels: string[];
-//   difficulty: "easy" | "medium" | "hard";
-//   skills: string[];
-//   status: "not-started" | "in-progress" | "completed";
-//   lastUpdated: string;
-// }
-
-// const trackedIssues: TrackedIssue[] = [
-//   {
-//     id: "1",
-//     title: "Add TypeScript support for configuration files",
-//     repo: "vite",
-//     repoOwner: "vitejs",
-//     labels: ["enhancement", "good first issue"],
-//     difficulty: "easy",
-//     skills: ["TypeScript", "Node.js"],
-//     status: "in-progress",
-//     lastUpdated: "2 hours ago",
-//   },
-//   {
-//     id: "2",
-//     title: "Improve error messages for invalid props",
-//     repo: "ui",
-//     repoOwner: "shadcn",
-//     labels: ["bug", "dx"],
-//     difficulty: "medium",
-//     skills: ["React", "TypeScript"],
-//     status: "not-started",
-//     lastUpdated: "1 day ago",
-//   },
-//   {
-//     id: "3",
-//     title: "Add dark mode toggle animation",
-//     repo: "next.js",
-//     repoOwner: "vercel",
-//     labels: ["feature request", "help wanted"],
-//     difficulty: "easy",
-//     skills: ["CSS", "React"],
-//     status: "completed",
-//     lastUpdated: "3 days ago",
-//   },
-// ];
 
 const statusTabs = [
   { key: "all", label: "All", icon: Bookmark },
@@ -123,12 +76,6 @@ export default function TrackedIssues() {
       title: "Syncing tracked issues...",
       description: "Fetching latest status",
     });
-  };
-
-  const toggleAI = (id: string) => {
-    setExpandedAI((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
   };
 
   const filteredIssues = trackedIssues.filter((issue) => {
@@ -319,84 +266,17 @@ export default function TrackedIssues() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={`h-8 w-8 p-0 rounded-full transition-all ${
-                            isAIExpanded
-                              ? "bg-accent/10 text-accent"
-                              : "hover:bg-accent/10 hover:text-accent"
-                          }`}
-                          onClick={() => toggleAI(issue.id.toString())}
-                        >
-                          <Sparkles className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
                           className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-accent/10 hover:text-accent"
                           asChild
                         >
-                          <Link href={`/issue/${issue.id}`}>
+                          <Link
+                            href={`/issue/${issue.issue.repo.owner}/${issue.issue.repo.name}/${issue.issue.githubNumber}`}
+                          >
                             <ArrowRight className="h-3.5 w-3.5" />
                           </Link>
                         </Button>
                       </div>
                     </div>
-
-                    {/* AI Expanded */}
-                    {isAIExpanded && (
-                      <div className="mx-6 my-4 p-4 rounded-xl bg-gradient-to-r from-accent/5 to-accent/10 border border-accent/20 animate-fade-in">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Sparkles className="h-4 w-4 text-accent" />
-                          <span className="text-sm font-medium text-accent">
-                            AI Analysis
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-6 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                              Difficulty:
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className={`text-xs rounded-full ${
-                                issue.difficulty === "easy"
-                                  ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/10"
-                                  : issue.difficulty === "medium"
-                                  ? "text-amber-500 border-amber-500/30 bg-amber-500/10"
-                                  : "text-rose-500 border-rose-500/30 bg-rose-500/10"
-                              }`}
-                            >
-                              {issue.difficulty}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                              Skills:
-                            </span>
-                            <div className="flex gap-1.5">
-                              {issue.skills.map((skill) => (
-                                <span
-                                  key={skill}
-                                  className="font-mono text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                              Updated:
-                            </span>
-                            <span className="text-foreground font-medium">
-                              {formatDistanceToNowStrict(
-                                new Date(issue.issue.githubUpdatedAt),
-                                { addSuffix: true }
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -431,7 +311,6 @@ export default function TrackedIssues() {
             ))
           ) : filteredIssues.length > 0 ? (
             filteredIssues.map((issue) => {
-              const isAIExpanded = expandedAI.includes(issue.id.toString());
               return (
                 <div
                   key={issue.id}
@@ -445,7 +324,7 @@ export default function TrackedIssues() {
                   </div>
 
                   <Link
-                    href={`/issue/${issue.id}`}
+                    href={`/issue/${issue.issue.repo.owner}/${issue.issue.repo.name}/${issue.issue.githubNumber}`}
                     className="font-medium text-sm hover:text-accent transition-colors block mb-3"
                   >
                     {issue.issue.title}
@@ -463,68 +342,7 @@ export default function TrackedIssues() {
                         </Badge>
                       ))}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => toggleAI(issue.id.toString())}
-                    >
-                      <Sparkles className="h-3 w-3" />
-                      {isAIExpanded ? (
-                        <ChevronUp className="h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3" />
-                      )}
-                    </Button>
                   </div>
-
-                  {isAIExpanded && (
-                    <div className="mt-3 pt-3 border-t border-border text-xs animate-fade-in">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">
-                            Difficulty:
-                          </span>
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] ${
-                              issue.difficulty === "easy"
-                                ? "text-accent border-accent/40"
-                                : issue.difficulty === "medium"
-                                ? "text-warning border-warning/40"
-                                : "text-destructive border-destructive/40"
-                            }`}
-                          >
-                            {issue.difficulty}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-muted-foreground">Skills:</span>
-                          {issue.skills.map((skill) => (
-                            <span
-                              key={skill}
-                              className="font-mono text-[10px] text-accent bg-accent/10 px-1.5 py-0.5 rounded"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                        <p className="text-muted-foreground">
-                          Updated:
-                          {formatDistanceToNowStrict(
-                            new Date(issue.issue.githubUpdatedAt),
-                            { addSuffix: true }
-                          )}
-                        </p>
-                      </div>
-                      <Link
-                        href={`/issue/${issue.id}`}
-                        className="mt-2 text-accent hover:underline flex items-center gap-1"
-                      >
-                        View details <ArrowRight className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  )}
                 </div>
               );
             })

@@ -20,6 +20,47 @@ export async function POST(req: NextRequest) {
         id: userId,
       },
     });
+
+    const issueDB = await prisma.issue.findUnique({
+      where: {
+        githubId: issue.githubId.toString(),
+      },
+    });
+
+    const issueExistsDB = !!issueDB;
+
+    if (issueExistsDB) {
+      const userIssue = await prisma.userIssue.findUnique({
+        where: {
+          userId_issueId_githubId: {
+            userId,
+            issueId: issueDB.id,
+            githubId: issueDB.githubId.toString(),
+          },
+        },
+      });
+      const userIssueExists = !!userIssue;
+      if (userIssueExists) {
+        return NextResponse.json(
+          {
+            ai: {
+              summary: userIssue.summary,
+              difficulty: userIssue.difficulty,
+              skills: userIssue.skills,
+              cause: userIssue.cause,
+              approach: userIssue.approach,
+              estimatedTime: userIssue.estimatedTime,
+              matchScore: userIssue.matchScore,
+              filestoExplore: userIssue.filestoExplore,
+              generatedAt: userIssue.createdAt,
+              model: "gpt-4o-mini",
+            },
+          },
+          { status: 202 }
+        );
+      }
+    }
+
     const prompt = `
 You are a senior open-source engineer and mentor.
 

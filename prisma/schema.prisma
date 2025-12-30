@@ -7,17 +7,21 @@ datasource db {
 }
 
 model User {
-  id            Int          @id @default(autoincrement())
-  name          String
-  email         String?      @unique
-  emailVerified DateTime?
-  image         String?
-  bio           String?
-  skills        String[]
-  accounts      Account[]
-  sessions      Session[]
-  issues        UserIssue[]
-  repos         Repository[] @relation("UserRepos")
+  id              Int          @id @default(autoincrement())
+  name            String
+  email           String?      @unique
+  emailVerified   DateTime?
+  githubUsername  String       @unique
+  image           String?
+  githubJoined    DateTime
+  location        String?
+  bio             String?
+  skills          String[]
+  experienceLevel String?
+  accounts        Account[]
+  sessions        Session[]
+  issues          UserIssue[]
+  repos           Repository[] @relation("UserRepos")
 }
 
 model Account {
@@ -104,7 +108,7 @@ model UserIssue {
   id             Int      @id @default(autoincrement())
   userId         Int
   issueId        Int
-  githubId       String
+  githubId       String   @unique
   notes          String?
   summary        String?
   difficulty     String?
