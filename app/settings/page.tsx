@@ -39,9 +39,9 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { UserDb } from "@/types/database/user/user";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { DisabledOverlay } from "../components/devlens/DisabledOverlay";
-import { signOut } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 
 const aiModels = [
   { value: "gpt-4", label: "GPT-4 Turbo", description: "Most capable" },
@@ -97,11 +97,30 @@ export default function Settings() {
   const handleDelete = useCallback(async () => {
     try {
       const res = await axios.delete("/api/user");
-    } catch (error) {
-      toast({
-        title: "Something went wrong",
-        description: "Unable to delete your account at the moment",
+      await signOut({
+        callbackUrl: "/",
       });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        switch (status) {
+          case 401:
+            signOut({ callbackUrl: "/" });
+            break;
+          case 500:
+            toast({
+              title: "Something went wrong",
+              description: "Unable to delete your account at the moment",
+            });
+
+          default:
+            toast({
+              title: "Something went wrong",
+              description: "Unable to delete your account at the moment",
+            });
+            break;
+        }
+      }
     }
   }, []);
 
@@ -111,11 +130,23 @@ export default function Settings() {
       const res = await axios.get("/api/user");
       const fetchedUser = res.data.user;
       setUser(fetchedUser);
-    } catch (error) {
-      console.log(error);
-      toast({
-        title: "Error fetching user details",
-      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        switch (status) {
+          case 401:
+            signOut({ callbackUrl: "/" });
+            break;
+          case 500:
+            toast({
+              title: "Something went wrong",
+              description: "Unable to fetch your details at the moment",
+            });
+
+          default:
+            break;
+        }
+      }
     } finally {
       setIsLoading(false);
     }

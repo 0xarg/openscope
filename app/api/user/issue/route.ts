@@ -4,7 +4,44 @@ import { UserIssueDb } from "@/types/database/user/UserIssue";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {}
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user.id;
+  const searchParams = await req.nextUrl.searchParams;
+  const githubId = String(searchParams.get("githubId"));
+
+  if (!githubId) {
+    return NextResponse.json(
+      {
+        message: "Please provide githubId in URL",
+      },
+      { status: 400 }
+    );
+  }
+  try {
+    const userIssue = await prisma.userIssue.findUnique({
+      where: {
+        githubId,
+        userId,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        userIssue,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      {
+        message: "Unable fetch user issue",
+      },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);

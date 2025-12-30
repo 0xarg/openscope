@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
       if (userIssueExists && userSummary) {
         return NextResponse.json(
           {
-            userIssue,
             ai: {
               summary: userIssue.summary,
               difficulty: userIssue.difficulty,

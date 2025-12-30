@@ -2,6 +2,7 @@ import prisma from "@/db/prisma";
 import { authOptions } from "@/lib/auth";
 import { fetchGithubRepo } from "@/lib/utils/fetchGithubRepo";
 import { mapGitHubRepo } from "@/lib/utils/mapGithubRepo";
+import { parseGithubRepoApiUrl } from "@/lib/utils/parseGithubRepoApiUrl";
 import { IssueWithAI } from "@/types/ai/issueAI";
 import { error } from "@/types/backendAPI/error";
 import { GitHubRepository } from "@/types/github/repository";
@@ -14,11 +15,20 @@ export async function POST(req: NextRequest) {
   const userId = session?.user.id;
   const data = await req.json();
   const issue: IssueWithAI = data.issue;
-  const owner: string = data.owner;
-  const name: string = data.name;
   const status: string = data.status;
 
   try {
+    const parsedRepoApiUrl = parseGithubRepoApiUrl(issue.repositoryAPIUrl);
+    const owner = parsedRepoApiUrl?.owner;
+    const name = parsedRepoApiUrl?.name;
+    if (!owner || !name) {
+      return NextResponse.json(
+        {
+          message: "Unable to get repositoryAPI url or parsing error",
+        },
+        { status: 400 }
+      );
+    }
     let repo = await fetchGithubRepo(owner, name);
 
     if (!repo) {
@@ -46,6 +56,20 @@ export async function POST(req: NextRequest) {
         ownerAvatarUrl: repo.owner.avatarUrl,
         license: repo.license,
         defaultBranch: repo.defaultBranch,
+      },
+    });
+
+    await prisma.userRepository.upsert({
+      where: {
+        userId_repoId: {
+          userId,
+          repoId: repoDb.id,
+        },
+      },
+      update: {},
+      create: {
+        userId,
+        repoId: repoDb.id,
       },
     });
 

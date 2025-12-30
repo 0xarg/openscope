@@ -79,6 +79,7 @@ export default function IssueDetail({
     try {
       const res = await axios.get("/api/issues/tracked/ids");
       setTrackedIds(res.data.trackedIds);
+      return res.data.trackedIds;
     } catch (error) {
       console.log(error);
     }
@@ -90,11 +91,7 @@ export default function IssueDetail({
         issue,
       });
       const data = res.data;
-      const fetchedUserIssue: UserIssueDb = data.userIssue;
-      setUserIssue(fetchedUserIssue);
       setIssue({ ...issue, ai: { ...issue.ai, ...data.ai } });
-      setStatus(fetchedUserIssue.status);
-      setNotes(fetchedUserIssue.notes ?? "");
       setIsAILoading(false);
     } catch (error) {
       console.log(error);
@@ -105,8 +102,24 @@ export default function IssueDetail({
       });
     }
   }, []);
+
+  const getUserIssue = useCallback(async (githubId: string) => {
+    try {
+      const res = await axios.get(`/api/user/issue?githubId=${githubId}`);
+      const fetchedUserIssue = res.data.userIssue;
+      setUserIssue(fetchedUserIssue);
+      setStatus(fetchedUserIssue.status);
+      setNotes(fetchedUserIssue.notes ?? "");
+    } catch (error) {
+      return;
+    }
+  }, []);
   const loadPageData = useCallback(async () => {
     setIsLoading(true);
+    toast({
+      title: "Fetching latest data",
+      description: "It may take few seconds to get latest data",
+    });
     try {
       const { owner, name, githubNumber } = await params;
       setRepoInfo({ owner, name });
@@ -116,10 +129,10 @@ export default function IssueDetail({
       const fetchedIssue: IssueWithAI = res.data.issue;
       setIssue(fetchedIssue);
       await fetchAIData(fetchedIssue);
-      await fetchTrackedIssueIds();
-      if (trackingIds.includes(fetchedIssue.githubId.toString())) {
+      const trackedIdsLocal = await fetchTrackedIssueIds();
+      if (trackedIdsLocal.includes(fetchedIssue.githubId.toString())) {
+        getUserIssue(fetchedIssue.githubId);
       }
-      toast({ title: "Synced", description: "Everything is up to date" });
     } catch (error) {
       console.error(error);
       toast({
@@ -131,13 +144,14 @@ export default function IssueDetail({
     }
   }, [fetchAIData, params, fetchTrackedIssueIds, toast]);
 
-  const handleSync = () => {
+  const handleSync = useCallback(async () => {
     toast({
-      title: "Syncing issues...",
+      title: "Syncing issue...",
       description: "Fetching latest data from GitHub",
     });
-    loadPageData();
-  };
+    await loadPageData();
+    toast({ title: "Synced", description: "Everything is up to date" });
+  }, []);
 
   useEffect(() => {
     loadPageData();
@@ -274,13 +288,13 @@ export default function IssueDetail({
             size="sm"
             className="gap-2"
             onClick={handleSync}
-            disabled={isSyncing || isLoading}
+            disabled={isLoading}
           >
             <RefreshCw
-              className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
             />
             <span className="hidden sm:inline">
-              {isSyncing ? "Syncing..." : "Sync"}
+              {isLoading ? "Syncing..." : "Sync"}
             </span>
           </Button>
         </div>

@@ -7,7 +7,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  const userId = parseInt(session?.user.id);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  const userId = Number(session?.user.id);
+  console.log(userId);
   const githubUsername = session?.user.githubUsername;
 
   try {
@@ -25,7 +29,7 @@ export async function GET() {
         {
           message: "No user found",
         },
-        { status: 403 }
+        { status: 401 }
       );
     }
 
@@ -48,6 +52,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const userId = parseInt(session?.user.id);
   const data = await req.json();
   const user: UserDb = data.updatedUser;
@@ -83,6 +90,9 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE() {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const userId = session?.user.id;
 
   try {
@@ -91,7 +101,6 @@ export async function DELETE() {
         id: userId,
       },
     });
-    signOut();
     return NextResponse.json(
       {
         message: "user deleted",

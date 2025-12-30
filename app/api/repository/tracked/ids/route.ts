@@ -8,17 +8,16 @@ export async function GET() {
   const userId = parseInt(session?.user.id);
 
   try {
-    const userRepos = await prisma.repository.findMany({
+    const userRepos = await prisma.userRepository.findMany({
       where: {
-        user: {
-          some: {
-            id: userId,
-          },
-        },
+        userId,
+      },
+      include: {
+        repo: true,
       },
     });
 
-    const trackedIds = userRepos.map((ur) => ur.githubId);
+    const trackedIds = userRepos.map((ur) => ur.repo.githubId);
 
     return NextResponse.json(
       {
