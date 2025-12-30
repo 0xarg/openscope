@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
   const userId = parseInt(session?.user.id);
   const data = await req.json();
   const repo: RepositoryWithAI = data.repo;
+  console.log(userId);
 
   try {
     const user = await prisma.user.findUnique({
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
         id: userId,
       },
     });
+    console.log(user?.skills);
+    console.log(user?.bio);
     const prompt = `
 You are an expert open-source mentor helping a developer decide whether he/she should try to contribute to this repository or not .
 
@@ -32,8 +35,8 @@ Rules:
 - Return JSON only.
 
 Produce JSON with exactly these keys:
-        macth -> score out of 100 based on user's detail, higher score means he should contribute
-        activityLevel -> activity level of the repository, make it one work like high, low or medium.
+        match -> score out of 100 based on user's detail, higher score means he should contribute
+        activityLevel -> activity level of the repository, make it one word.
 
         USER_BIO:
         ${user?.bio}
@@ -76,6 +79,7 @@ Produce JSON with exactly these keys:
       ],
     });
     const response = completion.choices[0].message;
+    // console.log(completion);
     const finaldata = safeParseAI(response.content ?? "");
     console.log(finaldata);
     return NextResponse.json(

@@ -59,12 +59,12 @@ export default function IssueDetail({
   params: { owner: string; name: string; githubNumber: string };
 }) {
   const [issue, setIssue] = useState<IssueWithAI>();
-  const [isTracked, setIsTracked] = useState(false);
   const [status, setStatus] = useState<
     "not-started" | "in-progress" | "completed"
   >("not-started");
   const [notes, setNotes] = useState("");
   const [showApproach, setShowApproach] = useState(true);
+  const [trackingIds, setTrackedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [repoInfo, setRepoInfo] = useState<{ owner: string; name: string }>({
     owner: "",
@@ -74,15 +74,10 @@ export default function IssueDetail({
   const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
 
-  const fetchtrackingStatus = useCallback(async () => {
+  const fetchTrackedIssueIds = useCallback(async () => {
     try {
       const res = await axios.get("/api/issues/tracked/ids");
-      const trackedIds: string[] = res.data.trackedIds;
-      if (issue) {
-        if (trackedIds.includes(issue?.githubId.toString())) {
-          setIsTracked(true);
-        }
-      }
+      setTrackedIds(res.data.trackedIds);
     } catch (error) {
       console.log(error);
     }
@@ -115,7 +110,7 @@ export default function IssueDetail({
       const fetchedIssue: IssueWithAI = res.data.issue;
       setIssue(fetchedIssue);
       await fetchAIData(fetchedIssue);
-      await fetchtrackingStatus();
+      await fetchTrackedIssueIds();
       toast({ title: "Synced", description: "Everything is up to date" });
     } catch (error) {
       console.error(error);
@@ -126,7 +121,7 @@ export default function IssueDetail({
     } finally {
       setIsLoading(false);
     }
-  }, [fetchAIData, params, fetchtrackingStatus, toast]);
+  }, [fetchAIData, params, fetchTrackedIssueIds, toast]);
 
   const handleSync = () => {
     toast({
@@ -140,49 +135,49 @@ export default function IssueDetail({
     loadPageData();
   }, [loadPageData]);
 
-  const handleTrack = () => {
-    setIsTracked(!isTracked);
-    toast({
-      title: isTracked ? "Issue untracked" : "Issue tracked",
-      description: isTracked
-        ? "Removed from your list"
-        : "Added to your tracked issues",
-    });
-  };
-  // const handleTrack = useCallback(
-  //   async (issue: IssueWithAI) => {
-  //     let alreadyTracked = false;
-  //     const githubId = issue.githubId.toString();
+  const handleTrack = useCallback(
+    async (issue: IssueWithAI) => {
+      let alreadyTracked = false;
 
-  //     if (isTracked) {
-  //       toast({
-  //         title: "Already tracking",
-  //         description: "Issue already tracked",
-  //       });
-  //       return;
-  //     }
-  //     try {
-  //       toast({
-  //         title: "Tracking issue",
-  //         description: "Adding to track list may take few seconds",
-  //       });
-  //       const res = await axios.post("/api/issues/track", {
-  //         issue: issue,
-  //       });
-  //       toast({
-  //         title: "Issue tracked",
-  //         description: "Issue saved with AI insights",
-  //       });
-  //     } catch (error) {
-  //       setIsTracked(false);
-  //       toast({
-  //         title: "Error tracking issue",
-  //         description: "Unable to track issue now",
-  //       });
-  //     }
-  //   },
-  //   [toast]
-  // );
+      if (trackingIds.includes(issue.githubId.toString())) {
+        toast({
+          title: "Already tracking",
+          description: "Issue already tracked",
+        });
+        return;
+      }
+
+      setTrackedIds((prev) => [...prev, issue.githubId.toString()]);
+
+      try {
+        toast({
+          title: "Tracking Issue",
+          description: "Tracking issue may take few seconds",
+        });
+        const res = await axios.post("/api/issue/track", {
+          issue,
+          owner: repoInfo.owner,
+          name: repoInfo.name,
+          status: status,
+        });
+
+        toast({
+          title: "Issue tracked",
+          description: "Sucessfully added issue to tracking list",
+        });
+      } catch (error) {
+        setTrackedIds((prev) =>
+          prev.filter((id) => id !== issue.githubId.toString())
+        );
+        toast({
+          title: "Something went wrong",
+          description:
+            "Due to server error, issue can't be tracked at the moment",
+        });
+      }
+    },
+    [trackingIds, repoInfo, status, toast]
+  );
 
   const handleCopyLink = () => {
     if (issue) {
@@ -316,13 +311,19 @@ export default function IssueDetail({
                   {/* Actions */}
                   <div className="flex flex-wrap items-center gap-2 mt-4">
                     <Button
-                      variant={isTracked ? "default" : "outline"}
+                      variant={
+                        trackingIds.includes(issue.githubId.toString())
+                          ? "default"
+                          : "outline"
+                      }
                       className={`gap-2 ${
-                        isTracked ? "bg-accent hover:bg-accent/90" : ""
+                        trackingIds.includes(issue.githubId.toString())
+                          ? "bg-accent hover:bg-accent/90"
+                          : ""
                       }`}
-                      onClick={handleTrack}
+                      onClick={() => handleTrack(issue)}
                     >
-                      {isTracked ? (
+                      {trackingIds.includes(issue.githubId.toString()) ? (
                         <>
                           <BookmarkCheck className="h-4 w-4" />
                           Tracked
@@ -401,7 +402,7 @@ export default function IssueDetail({
           {/* Right - AI & Status (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
             {/* Status tracker (if tracked) */}
-            {isTracked && (
+            {issue && trackingIds.includes(issue.githubId.toString()) && (
               <div className="p-5 rounded-xl bg-card border border-border animate-slide-in-right">
                 <p className="text-sm font-medium mb-3">Progress Status</p>
                 <div className="flex gap-2">

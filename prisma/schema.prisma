@@ -112,7 +112,7 @@ model UserIssue {
   cause          String?
   approach       String[]
   estimatedTime  String?
-  matchScore     String
+  matchScore     String?
   filestoExplore String[]
   createdAt      DateTime @default(now())
   status         String

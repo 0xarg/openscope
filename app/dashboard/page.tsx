@@ -207,6 +207,7 @@ export default function Dashboard() {
   }, [fetchTrackedReposIds, fetchTrendingRepos]);
 
   const getMatchClass = (difficulty: string) => {
+    console.log(difficulty);
     const classes: Record<string, string> = {
       high: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
       medium: "bg-amber-500/10 text-amber-500 border-amber-500/30",
@@ -308,7 +309,7 @@ export default function Dashboard() {
               Repository
             </div>
             <div className="col-span-1">Language</div>
-            <div className="col-span-1 text-center ">Issues</div>
+            <div className="col-span-1 text-center ">Issues/Prs</div>
             <div className="col-span-2 text-center ">Stars</div>
             <div className="col-span-2 text-center ">Forks</div>
             <div className="col-span-1 text-center ">Status</div>
@@ -351,7 +352,7 @@ export default function Dashboard() {
                 const isExpanded = expandedAI.includes(
                   repo.githubId.toString()
                 );
-                let matchLevel = "unknown";
+                let matchLevel = "";
                 if (repo.ai?.match) {
                   const score = parseInt(repo.ai.match);
                   if (score >= 80) {
@@ -361,6 +362,7 @@ export default function Dashboard() {
                   } else {
                     matchLevel = "low";
                   }
+                  console.log(matchLevel);
                 }
                 const isTracked = trackedIds.includes(repo.githubId.toString());
                 return (
@@ -386,7 +388,7 @@ export default function Dashboard() {
                           />
                         </button>
                         <Link
-                          href={`/issue/${repo.githubId}`}
+                          href={`/issues/${repo.owner.login}/${repo.name}`}
                           className="hover:text-accent truncate text-sm font-medium transition-colors"
                         >
                           <span className="text-muted-foreground font-normal">

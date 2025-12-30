@@ -15,6 +15,7 @@ export interface IssueAIStats {
 }
 
 export type IssueWithAI = GitHubIssue & {
+  notes?: string;
   ai?: IssueAIStats;
   tracked?: boolean;
 };
