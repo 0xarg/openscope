@@ -7,11 +7,11 @@ datasource db {
 }
 
 model User {
-  id              Int          @id @default(autoincrement())
+  id              Int              @id @default(autoincrement())
   name            String
-  email           String?      @unique
+  email           String?          @unique
   emailVerified   DateTime?
-  githubUsername  String       @unique
+  githubUsername  String?          @unique
   image           String?
   githubJoined    DateTime?
   location        String?
@@ -21,7 +21,7 @@ model User {
   accounts        Account[]
   sessions        Session[]
   issues          UserIssue[]
-  repos           Repository[] @relation("UserRepos")
+  repos           UserRepository[]
 }
 
 model Account {
@@ -59,7 +59,7 @@ model VerificationToken {
 }
 
 model Repository {
-  id             Int     @id @default(autoincrement())
+  id             Int              @id @default(autoincrement())
   githubUrl      String
   owner          String
   name           String
@@ -74,7 +74,7 @@ model Repository {
   license        String?
   defaultBranch  String?
   issues         Issue[]
-  user           User[]  @relation("UserRepos")
+  user           UserRepository[]
 
   @@unique([name, owner], name: "name_owner")
 }
@@ -120,8 +120,18 @@ model UserIssue {
   filestoExplore String[]
   createdAt      DateTime @default(now())
   status         String
-  issue          Issue    @relation(fields: [issueId], references: [id])
-  user           User     @relation(fields: [userId], references: [id])
+  issue          Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, issueId, githubId])
+}
+
+model UserRepository {
+  userId Int
+  repoId Int
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repo Repository @relation(fields: [repoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, repoId])
 }

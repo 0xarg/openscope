@@ -2,6 +2,7 @@ import prisma from "@/db/prisma";
 import { authOptions } from "@/lib/auth";
 import { UserDb } from "@/types/database/user/user";
 import { getServerSession } from "next-auth";
+import { signOut } from "next-auth/react";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
@@ -74,6 +75,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         message: "Error updating user",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user.id;
+
+  try {
+    await prisma.user.delete({
+      where: {
+        id: userId,
+      },
+    });
+    signOut();
+    return NextResponse.json(
+      {
+        message: "user deleted",
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      {
+        message: "Error deleting user",
       },
       { status: 500 }
     );

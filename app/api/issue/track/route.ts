@@ -116,3 +116,45 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user.id;
+  const searchParams = await req.nextUrl.searchParams;
+  const issueId = Number(searchParams.get("issueId"));
+  const githubId = searchParams.get("githubId");
+
+  if (!issueId || !githubId) {
+    return NextResponse.json(
+      {
+        message: "Please include GithubID and IssueID in url",
+      },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await prisma.userIssue.delete({
+      where: {
+        userId_issueId_githubId: {
+          userId,
+          issueId,
+          githubId,
+        },
+      },
+    });
+    return NextResponse.json(
+      {
+        message: "Issue for the user deleted",
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        message: "Error removing issue",
+      },
+      { status: 500 }
+    );
+  }
+}

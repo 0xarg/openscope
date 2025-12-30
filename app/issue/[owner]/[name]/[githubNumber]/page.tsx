@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import {
 import Link from "next/link";
 import { IssueWithAI } from "@/types/ai/issueAI";
 import axios from "axios";
+import { UserIssueDb } from "@/types/database/user/UserIssue";
 
 const statusOptions = [
   {
@@ -59,10 +60,10 @@ export default function IssueDetail({
   params: { owner: string; name: string; githubNumber: string };
 }) {
   const [issue, setIssue] = useState<IssueWithAI>();
-  const [status, setStatus] = useState<
-    "not-started" | "in-progress" | "completed"
-  >("not-started");
+  const [status, setStatus] = useState<string>("not-started");
+  const [userIssue, setUserIssue] = useState<UserIssueDb>();
   const [notes, setNotes] = useState("");
+  const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const [showApproach, setShowApproach] = useState(true);
   const [trackingIds, setTrackedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,9 +90,14 @@ export default function IssueDetail({
         issue,
       });
       const data = res.data;
+      const fetchedUserIssue: UserIssueDb = data.userIssue;
+      setUserIssue(fetchedUserIssue);
       setIssue({ ...issue, ai: { ...issue.ai, ...data.ai } });
+      setStatus(fetchedUserIssue.status);
+      setNotes(fetchedUserIssue.notes ?? "");
       setIsAILoading(false);
     } catch (error) {
+      console.log(error);
       setIsAILoading(true);
       toast({
         title: "Unable to fetch AI insights",
@@ -111,6 +117,8 @@ export default function IssueDetail({
       setIssue(fetchedIssue);
       await fetchAIData(fetchedIssue);
       await fetchTrackedIssueIds();
+      if (trackingIds.includes(fetchedIssue.githubId.toString())) {
+      }
       toast({ title: "Synced", description: "Everything is up to date" });
     } catch (error) {
       console.error(error);
@@ -134,6 +142,40 @@ export default function IssueDetail({
   useEffect(() => {
     loadPageData();
   }, [loadPageData]);
+
+  const handleSave = useCallback(
+    async (overrides?: { notes?: string; status?: string }) => {
+      if (!userIssue) {
+        return;
+      }
+      const payload = {
+        ...userIssue,
+        status: overrides?.status ?? status,
+        notes: overrides?.notes ?? notes,
+      };
+      if (
+        payload.notes === userIssue.notes &&
+        payload.status === userIssue.status
+      ) {
+        return;
+      }
+
+      try {
+        const res = await axios.put("/api/user/issue", {
+          payload,
+        });
+        toast({
+          title: "Details updated",
+        });
+      } catch (error) {
+        toast({
+          title: "Error editing details",
+        });
+        loadPageData();
+      }
+    },
+    [userIssue, status, notes]
+  );
 
   const handleTrack = useCallback(
     async (issue: IssueWithAI) => {
@@ -385,18 +427,24 @@ export default function IssueDetail({
             </div>
 
             {/* Notes section */}
-            <div className="p-5 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Your Notes</span>
+            {issue && trackingIds.includes(issue.githubId.toString()) && (
+              <div className="p-5 rounded-xl bg-card border border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Your Notes</span>
+                </div>
+                <Textarea
+                  placeholder="Add your notes, ideas, or approach here..."
+                  ref={notesRef}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  onBlur={() =>
+                    handleSave({ notes: notesRef.current?.value ?? "" })
+                  }
+                  className="min-h-[120px] resize-none text-sm"
+                />
               </div>
-              <Textarea
-                placeholder="Add your notes, ideas, or approach here..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[120px] resize-none text-sm"
-              />
-            </div>
+            )}
           </div>
 
           {/* Right - AI & Status (2 cols) */}
@@ -416,6 +464,7 @@ export default function IssueDetail({
                       }`}
                       onClick={() => {
                         setStatus(option.value as typeof status);
+                        handleSave({ status: option.value });
                         toast({ title: `Status updated to ${option.label}` });
                       }}
                     >

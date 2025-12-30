@@ -40,9 +40,11 @@ export async function POST(req: NextRequest) {
         },
       });
       const userIssueExists = !!userIssue;
-      if (userIssueExists) {
+      const userSummary = !!userIssue?.summary;
+      if (userIssueExists && userSummary) {
         return NextResponse.json(
           {
+            userIssue,
             ai: {
               summary: userIssue.summary,
               difficulty: userIssue.difficulty,
@@ -152,7 +154,28 @@ Return JSON only.
     });
     const response = completion.choices[0].message;
     const finaldata = safeParseAI(response.content ?? "");
-    console.log(finaldata);
+    if (issueDB) {
+      await prisma.userIssue.update({
+        where: {
+          userId_issueId_githubId: {
+            userId,
+            issueId: issueDB.id,
+            githubId: issueDB.githubId,
+          },
+        },
+        data: {
+          summary: finaldata.summary,
+          difficulty: finaldata.difficulty,
+          skills: finaldata.skills,
+          cause: finaldata.cause,
+          approach: finaldata.approach,
+          estimatedTime: finaldata.estimatedTime,
+          matchScore: finaldata.matchScore.toString(),
+          filestoExplore: finaldata.filestoExplore,
+        },
+      });
+    }
+    // console.log(finaldata);
     return NextResponse.json(
       {
         ai: {

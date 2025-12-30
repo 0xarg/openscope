@@ -80,8 +80,11 @@ export default function Issues({
           title: "Tracking issue",
           description: "Adding to track list may take few seconds",
         });
-        const res = await axios.post("/api/issues/track", {
+        const res = await axios.post("/api/issue/track", {
           issue: issue,
+          owner: repoInfo?.owner.login,
+          name: repoInfo?.name,
+          status: "not-started",
         });
         toast({
           title: "Issue tracked",

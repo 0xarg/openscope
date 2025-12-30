@@ -12,17 +12,17 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   const userId = parseInt(session?.user.id);
   try {
-    const user = await prisma.user.findUnique({
+    const repos = await prisma.userRepository.findMany({
       where: {
-        id: userId,
+        userId,
       },
       include: {
-        repos: true,
+        repo: true,
       },
     });
     return NextResponse.json(
       {
-        repos: user?.repos,
+        repos: repos.map((r) => r.repo),
       },
       { status: 200 }
     );
@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
       { status: 501 }
     );
   }
-  console.log(urlParsed);
   const name = urlParsed.repo;
   const owner = urlParsed.owner ?? "";
 
@@ -67,8 +66,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const repo = await fetchGithubRepo(owner, name);
-    if (!repo) {
+    const repoData = await fetchGithubRepo(owner, name);
+    if (!repoData) {
       return NextResponse.json(
         {
           message: "Unable to fetch Repository information",
@@ -77,55 +76,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const repoExist = await prisma.repository.findFirst({
+    const repository = await prisma.repository.upsert({
       where: {
-        owner,
-        name,
-        user: {
-          some: {
-            id: userId,
-          },
+        name_owner: {
+          name,
+          owner,
         },
+      },
+      update: {},
+      create: {
+        name: repoData.name,
+        owner: repoData.owner.login,
+        githubUrl: repoData.htmlUrl,
+        githubId: repoData.githubId.toString(),
+        ownerAvatarUrl: repoData.owner.avatarUrl,
+        description: repoData.description,
+        language: repoData.primaryLanguage,
+        stars: repoData.stars,
+        forks: repoData.forks,
+        issueCount: repoData.openIssues,
+        prCount: repoData.openPrs,
+        license: repoData.license,
+        defaultBranch: repoData.defaultBranch,
       },
     });
-    const alreadyAdded = !!repoExist;
 
-    if (alreadyAdded) {
-      return NextResponse.json(
-        {
-          message: "Repository already added",
-        },
-        { status: 502 }
-      );
-    }
-
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
+    await prisma.userRepository.create({
       data: {
-        repos: {
-          connectOrCreate: {
-            where: {
-              name_owner: { name, owner },
-            },
-            create: {
-              name: repo.name,
-              owner: repo.owner.login,
-              githubUrl: repo.htmlUrl,
-              githubId: repo.githubId.toString(),
-              ownerAvatarUrl: repo.owner.avatarUrl,
-              description: repo.description,
-              language: repo.primaryLanguage,
-              stars: repo.stars,
-              forks: repo.forks,
-              issueCount: repo.openIssues,
-              prCount: repo.openPrs,
-              license: repo.license,
-              defaultBranch: repo.defaultBranch,
-            },
-          },
-        },
+        userId,
+        repoId: repository.id,
       },
     });
 
@@ -150,24 +129,25 @@ export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = parseInt(session?.user.id);
   const searchParams = await req.nextUrl.searchParams;
-  const repoId = parseInt(searchParams.get("id")!);
+
+  const repoId = Number(searchParams.get("id"));
+
+  if (!repoId) {
+    return NextResponse.json(
+      { message: "Repository id missing" },
+      { status: 400 }
+    );
+  }
 
   try {
-    await prisma.user.update({
+    await prisma.userRepository.delete({
       where: {
-        id: userId,
-      },
-      data: {
-        repos: {
-          disconnect: {
-            id: repoId,
-          },
-        },
+        userId_repoId: { userId, repoId },
       },
     });
 
     return NextResponse.json({
-      message: "repo deleted",
+      message: "Repository removed for user",
     });
   } catch (error) {
     console.log(error);

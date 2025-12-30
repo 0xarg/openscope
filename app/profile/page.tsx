@@ -32,6 +32,7 @@ import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserDb } from "@/types/database/user/user";
 import { formatDate } from "date-fns";
+import Link from "next/link";
 
 const userData = {
   name: "Alex Developer",
@@ -261,17 +262,24 @@ export default function Profile() {
                         )}
                       </div>
                       {user.experienceLevel && (
-                        <Badge variant="outline" className="mt-3 text-xs">
-                          {
-                            experienceLevels.find(
-                              (l) => l.value === user.experienceLevel
-                            )?.icon
-                          }
-                          {
-                            experienceLevels.find(
-                              (l) => l.value === user.experienceLevel
-                            )?.label
-                          }
+                        <Badge
+                          variant="outline"
+                          className="mt-3 flex gap-2 text-xs"
+                        >
+                          <p>
+                            {
+                              experienceLevels.find(
+                                (l) => l.value === user.experienceLevel
+                              )?.icon
+                            }
+                          </p>
+                          <p>
+                            {
+                              experienceLevels.find(
+                                (l) => l.value === user.experienceLevel
+                              )?.label
+                            }
+                          </p>
                         </Badge>
                       )}
                     </div>
@@ -357,15 +365,7 @@ export default function Profile() {
                       <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t text-sm text-muted-foreground justify-center sm:justify-start">
                         <span className="flex items-center gap-1.5">
                           <MapPin className="h-3.5 w-3.5" />
-                          {isEditing ? (
-                            <Input
-                              value={user.location}
-                              disabled={true}
-                              className="h-7 w-28 text-xs"
-                            />
-                          ) : (
-                            user.location
-                          )}
+                          {user.location}
                         </span>
                         {/* <span className="flex items-center gap-1.5">
                           <LinkIcon className="h-3.5 w-3.5" />
@@ -647,7 +647,7 @@ export default function Profile() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm">GitHub</p>
                         <p className="text-xs text-muted-foreground font-mono truncate">
-                          @{profile.username}
+                          @{user?.githubUsername}
                         </p>
                       </div>
                       <Button
@@ -655,7 +655,12 @@ export default function Profile() {
                         size="icon"
                         className="h-8 w-8 shrink-0"
                       >
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <Link
+                          href={`https://github.com/${user?.githubUsername}`}
+                          target="blank"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
                       </Button>
                     </div>
                   </CardContent>
