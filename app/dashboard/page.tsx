@@ -592,7 +592,7 @@ export default function Dashboard() {
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <Link
-                        href={`/issue/${repo.githubId}`}
+                        href={`/issuee/${repo.owner.login}/${repo.name}`}
                         className="hover:text-accent font-medium transition-colors"
                       >
                         <span className="text-muted-foreground font-normal">
