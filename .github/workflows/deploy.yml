@@ -8,59 +8,37 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Enable pnpm
-        run: corepack enable
+      - name: Build image
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}/openscope:latest .
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Push image
+        run: |
+          docker push ghcr.io/${{ github.repository }}/openscope:latest
 
-      # 🔑 Prisma needs DATABASE_URL even for generate
-      - name: Generate Prisma Client
-        run: pnpm prisma generate
-        env:
-          DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
-
-      # 🔥 Heavy step — CI only
-      - name: Build Next.js
-        run: pnpm build
-
-      - name: Build Docker image
-        run: docker build -t openscope .
-
-      - name: Save Docker image
-        run: docker save openscope | gzip > openscope.tar.gz
-
-      - name: Upload image to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "openscope.tar.gz"
-          target: "/root"
-
-      - name: Run container on server
+      - name: Deploy to DigitalOcean
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            docker load < /root/openscope.tar.gz
+            docker pull ghcr.io/${{ github.repository }}/openscope:latest
             docker stop openscope || true
             docker rm openscope || true
             docker run -d \
-              --restart unless-stopped \
-              -p 3000:3000 \
-              --env-file /root/.env.production.local \
               --name openscope \
-              openscope
+              -p 3000:3000 \
+              --env-file .env.production.local \
+              --restart unless-stopped \
+              ghcr.io/${{ github.repository }}/openscope:latest
