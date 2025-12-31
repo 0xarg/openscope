@@ -21,8 +21,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
-RUN pnpm build
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 # -----------------------------
 # Production runner
