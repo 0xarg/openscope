@@ -320,7 +320,7 @@ export default function LandingPage() {
                 className="hidden rounded-full px-4 sm:flex sm:px-5"
                 asChild
               >
-                <Link href="/auth">Sign up / Log in</Link>
+                <Link href="/demo/dashboard">Demo</Link>
               </Button>
               <Button
                 variant="ghost"
@@ -742,7 +742,7 @@ export default function LandingPage() {
                   variant={plan.popular ? "default" : "outline"}
                   asChild
                 >
-                  <Link href="/dashboard">{plan.cta}</Link>
+                  <Link href="/demo/pricing">{plan.cta}</Link>
                 </Button>
               </div>
             ))}
@@ -772,7 +772,7 @@ export default function LandingPage() {
         <footer className="border-border relative border-t px-4 py-6 sm:py-8">
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-muted-foreground order-2 text-[10px] font-normal uppercase tracking-wider md:order-1 sm:text-xs">
-              © 2025 All Rights Reserved
+              © 2026 All Rights Reserved
             </p>
             <div className="order-1 flex items-center gap-1 md:order-2">
               <span className="text-sm font-semibold tracking-tight">DEV</span>
