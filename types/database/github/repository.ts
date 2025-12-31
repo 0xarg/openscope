@@ -1,6 +1,6 @@
 export interface RepositoryDB {
   id: number;
-  githubId: string;
+  githubId: string | null;
   githubUrl: string;
   name: string;
   owner: string;

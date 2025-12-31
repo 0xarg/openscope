@@ -18,7 +18,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const plans = {
@@ -49,9 +48,8 @@ const plans = {
 };
 
 export default function Checkout() {
-  const searchParams = useSearchParams();
   const planKey = "pro";
-  const billingCycle = searchParams.get("billing") || "monthly";
+  const billingCycle = "monthly";
   const plan = plans[planKey] || plans.pro;
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -64,11 +62,9 @@ export default function Checkout() {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const { toast } = useToast();
 
-  const price =
-    billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
-  const period = billingCycle === "yearly" ? "/year" : "/month";
-  const savings =
-    billingCycle === "yearly" ? plan.monthlyPrice * 12 - plan.yearlyPrice : 0;
+  const price = plan.monthlyPrice;
+  const period = "/month";
+  const savings = 0;
 
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
@@ -386,12 +382,12 @@ export default function Checkout() {
                     <span className="text-muted-foreground">{period}</span>
                   </div>
 
-                  {billingCycle === "yearly" && savings > 0 && (
+                  {/* {billingCycle === "yearly" && savings > 0 && (
                     <Badge className="mt-3 bg-success/10 text-success border-success/20">
                       <Sparkles className="h-3 w-3 mr-1" />
                       Save ${savings} per year
                     </Badge>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Features */}

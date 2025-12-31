@@ -34,6 +34,12 @@ import axiosInstance from "@/lib/axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppLayout } from "@/components/devlens/app-sidebar";
 import { DisabledOverlay } from "@/components/devlens/DisabledOverlay";
+type PageProps = {
+  params: Promise<{
+    owner: string;
+    name: string;
+  }>;
+};
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",
@@ -74,11 +80,7 @@ const getFriendlinessClass = (level: string) => {
   return classes[level] || "";
 };
 
-export default function RepositoryDetail({
-  params,
-}: {
-  params: { owner: string; name: string };
-}) {
+export default function RepositoryDetail({ params }: PageProps) {
   const [showGettingStarted, setShowGettingStarted] = useState(true);
   const [repo, setRepo] = useState<RepositoryWithAI>();
   const [isLoading, setIsLoading] = useState<boolean>(false);

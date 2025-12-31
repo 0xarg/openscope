@@ -1,5 +1,6 @@
 import prisma from "@/db/prisma";
 import { mapGitHubIssue } from "@/lib/utils/mapGithubIssue";
+import { RepositoryDB } from "@/types/database/github/repository";
 import { GitHubIssue, GitHubIssueAPI } from "@/types/github/issues";
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
@@ -35,22 +36,23 @@ export async function GET() {
 
     const validResults = results.filter(Boolean);
 
-    const filteredIssues = validResults.flatMap((repo) =>
-      repo?.issues
-        .filter((issue: any) => !issue.pull_request)
-        .map((issue: any) => ({
-          id: issue.number,
-          body: issue.body,
-          title: issue.title,
-          state: issue.state,
-          labels: issue.labels.map((l: any) => l.name),
-          comments: issue.comments,
-          createdAt: issue.created_at,
-          updatedAt: issue.updated_at,
-          url: issue.html_url,
-          owner: repo.owner,
-          name: repo.name,
-        }))
+    const filteredIssues = validResults.flatMap(
+      (repo: (typeof validResults)[number]) =>
+        repo?.issues
+          .filter((issue: GitHubIssueAPI) => !issue.pull_request)
+          .map((issue: GitHubIssueAPI) => ({
+            id: issue.number,
+            body: issue.body,
+            title: issue.title,
+            state: issue.state,
+            labels: issue.labels.map((l: { name: string }) => l.name),
+            comments: issue.comments,
+            createdAt: issue.created_at,
+            updatedAt: issue.updated_at,
+            url: issue.html_url,
+            owner: repo.owner,
+            name: repo.name,
+          }))
     );
 
     return NextResponse.json({

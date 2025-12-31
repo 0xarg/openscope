@@ -1,14 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { DifficultyBadge } from "./DifficultyBadge";
-import { 
-  Bookmark, 
+import {
+  Bookmark,
   BookmarkCheck,
   ExternalLink,
   Circle,
   Clock,
-  CheckCircle2
+  CheckCircle2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 export interface Issue {
   id: string;
@@ -30,9 +30,13 @@ interface IssueRowProps {
 }
 
 const statusConfig = {
-  "not-started": { icon: Circle, color: "text-muted-foreground", label: "Planned" },
+  "not-started": {
+    icon: Circle,
+    color: "text-muted-foreground",
+    label: "Planned",
+  },
   "in-progress": { icon: Clock, color: "text-warning", label: "In Progress" },
-  "completed": { icon: CheckCircle2, color: "text-success", label: "Done" },
+  completed: { icon: CheckCircle2, color: "text-success", label: "Done" },
 };
 
 export function IssueRow({ issue, onTrack, showStatus }: IssueRowProps) {
@@ -40,8 +44,8 @@ export function IssueRow({ issue, onTrack, showStatus }: IssueRowProps) {
   const statusColor = issue.status ? statusConfig[issue.status].color : "";
 
   return (
-    <Link 
-      to={`/issue/${issue.id}`}
+    <Link
+      href={`/issue/${issue.id}`}
       className="group flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 border-b border-border/50 last:border-b-0 transition-colors cursor-pointer"
     >
       {/* Track button */}
@@ -80,7 +84,11 @@ export function IssueRow({ issue, onTrack, showStatus }: IssueRowProps) {
       {/* Labels */}
       <div className="hidden md:flex items-center gap-1 shrink-0">
         {issue.labels.slice(0, 2).map((label) => (
-          <Badge key={label} variant="label" className="text-[10px] px-1.5 py-0">
+          <Badge
+            key={label}
+            variant="label"
+            className="text-[10px] px-1.5 py-0"
+          >
             {label}
           </Badge>
         ))}
@@ -94,7 +102,10 @@ export function IssueRow({ issue, onTrack, showStatus }: IssueRowProps) {
       {/* Skills */}
       <div className="hidden lg:flex items-center gap-1 shrink-0 w-32">
         {issue.skills.slice(0, 2).map((skill) => (
-          <span key={skill} className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+          <span
+            key={skill}
+            className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
+          >
             {skill}
           </span>
         ))}

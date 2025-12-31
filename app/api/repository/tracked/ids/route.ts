@@ -1,5 +1,6 @@
 import prisma from "@/db/prisma";
 import { authOptions } from "@/lib/auth";
+import { UserIssueDb } from "@/types/database/user/UserIssue";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 

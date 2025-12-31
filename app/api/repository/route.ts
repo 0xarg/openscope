@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { AddRepoSchema } from "@/lib/types";
 import { fetchGithubRepo } from "@/lib/utils/fetchGithubRepo";
 import { parseUrl } from "@/lib/utils/parseUrl";
+import { UserRepositoryWithRepo } from "@/types/database/user/UserRepos";
 import { GitHubRepository } from "@/types/github/repository";
 import axios from "axios";
 import { getServerSession } from "next-auth";

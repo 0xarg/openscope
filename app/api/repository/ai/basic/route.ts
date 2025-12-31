@@ -9,6 +9,7 @@ import { openai } from "@/lib/openai";
 import { safeParseAI } from "@/lib/utils/parseAIRes";
 import { IssueWithAI } from "@/types/ai/issueAI";
 import { RepositoryWithAI } from "@/types/ai/repositoryAI";
+import { PlanType } from "@/types/database/user/UserPlan";
 import { GitHubIssue } from "@/types/github/issues";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const planType = user.plan.plan;
+    const planType = user.plan.plan as PlanType;
     const usage = user.usage;
     const limits = PLAN_LIMITS[planType];
 

@@ -35,12 +35,14 @@ import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const languages = ["All", "TypeScript", "JavaScript", "Python", "Rust", "Go"];
 const popularities = ["All", "Legendary", "Famous", "Popular", "Rising"];
+type PageProps = {
+  params: Promise<{
+    owner: string;
+    name: string;
+  }>;
+};
 
-export default function Issues({
-  params,
-}: {
-  params: { name: string; owner: string };
-}) {
+export default function Issues({ params }: PageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [trackedIds, setTrackedIds] = useState<string[]>([]);
   const [expandedAI, setExpandedAI] = useState<string>("");

@@ -34,6 +34,13 @@ import { UserIssueDb } from "@/types/database/user/UserIssue";
 import { AppLayout } from "@/components/devlens/app-sidebar";
 import axios from "axios";
 import { DisabledOverlay } from "@/components/devlens/DisabledOverlay";
+type PageProps = {
+  params: Promise<{
+    owner: string;
+    name: string;
+    githubNumber: string;
+  }>;
+};
 
 const statusOptions = [
   {
@@ -56,11 +63,7 @@ const statusOptions = [
   },
 ];
 
-export default function IssueDetail({
-  params,
-}: {
-  params: { owner: string; name: string; githubNumber: string };
-}) {
+export default function IssueDetail({ params }: PageProps) {
   const [issue, setIssue] = useState<IssueWithAI>();
   const [status, setStatus] = useState<string>("not-started");
   const [blur, setBlur] = useState<boolean>(false);
