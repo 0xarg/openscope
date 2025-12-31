@@ -35,12 +35,12 @@ const oauthProviders = [
     color: "text-white",
     bgColor: "bg-[#24292F] hover:bg-[#1a1e22]",
   },
-  {
-    name: "Google",
-    icon: Chrome,
-    color: "text-white",
-    bgColor: "bg-[#4285F4] hover:bg-[#357ae8]",
-  },
+  // {
+  //   name: "Google",
+  //   icon: Chrome,
+  //   color: "text-white",
+  //   bgColor: "bg-[#4285F4] hover:bg-[#357ae8]",
+  // },
   {
     name: "Email",
     icon: Mail,
@@ -312,14 +312,14 @@ export default function AuthPage() {
                               variant="outline"
                               size="lg"
                               className={cn(
-                                "w-full justify-start gap-3 border-0 text-left font-semibold transition-all duration-200 hover:scale-[1.02]",
+                                "w-full justify-start gap-3 border-0 text-left hover:text-accent/20 font-semibold transition-all duration-200 hover:scale-[1.02]",
                                 provider.bgColor,
                                 provider.color
                               )}
                               onClick={() => handleOAuthClick(provider.name)}
                             >
-                              <provider.icon className="h-5 w-5" />
-                              <span className="flex-1">
+                              <provider.icon className="h-5 w-5 " />
+                              <span className="flex-1 .">
                                 Continue with {provider.name}
                               </span>
                               <ArrowRight className="h-4 w-4 opacity-60" />

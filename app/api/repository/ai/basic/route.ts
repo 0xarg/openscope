@@ -1,5 +1,10 @@
 import prisma from "@/db/prisma";
 import { authOptions } from "@/lib/auth";
+import { PLAN_LIMITS } from "@/lib/billings/planLimits";
+import {
+  shouldResetDaily,
+  shouldResetMonthly,
+} from "@/lib/billings/resetUsage";
 import { openai } from "@/lib/openai";
 import { safeParseAI } from "@/lib/utils/parseAIRes";
 import { IssueWithAI } from "@/types/ai/issueAI";
@@ -16,16 +21,62 @@ export async function POST(req: NextRequest) {
   const userId = parseInt(session?.user.id);
   const data = await req.json();
   const repo: RepositoryWithAI = data.repo;
-  console.log(userId);
 
   try {
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
       },
+      include: {
+        usage: true,
+        plan: true,
+      },
     });
-    console.log(user?.skills);
-    console.log(user?.bio);
+    if (!user || !user.plan || !user.usage) {
+      return NextResponse.json(
+        { message: "User billing info missing" },
+        { status: 403 }
+      );
+    }
+
+    const planType = user.plan.plan;
+    const usage = user.usage;
+    const limits = PLAN_LIMITS[planType];
+
+    if (shouldResetDaily(usage.lastDailyReset)) {
+      await prisma.userUsage.update({
+        where: { userId },
+        data: {
+          aiRequestsToday: 0,
+          aiTokensToday: 0,
+          lastDailyReset: new Date(),
+        },
+      });
+      usage.aiRequestsToday = 0;
+    }
+    if (shouldResetMonthly(usage.lastMonthlyReset)) {
+      await prisma.userUsage.update({
+        where: { userId },
+        data: {
+          aiRequestsMonth: 0,
+          aiTokensMonth: 0,
+          lastMonthlyReset: new Date(),
+        },
+      });
+      usage.aiRequestsMonth = 0;
+    }
+    if (
+      usage.aiRequestsToday >= limits.aiRequestsPerDay ||
+      usage.aiRequestsMonth >= limits.aiRequestsPerMonth
+    ) {
+      return NextResponse.json(
+        {
+          code: "AI_LIMIT_EXCEEDED",
+          message: "AI usage limit reached. Upgrade your plan.",
+        },
+        { status: 429 }
+      );
+    }
     const prompt = `
 You are an expert open-source mentor helping a developer decide whether he/she should try to contribute to this repository or not .
 
@@ -84,7 +135,13 @@ Produce JSON with exactly these keys:
     const response = completion.choices[0].message;
     // console.log(completion);
     const finaldata = safeParseAI(response.content ?? "");
-    console.log(finaldata);
+    await prisma.userUsage.update({
+      where: { userId },
+      data: {
+        aiRequestsToday: { increment: 1 },
+        aiRequestsMonth: { increment: 1 },
+      },
+    });
     return NextResponse.json(
       {
         ai: {

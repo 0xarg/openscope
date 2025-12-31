@@ -475,7 +475,7 @@ export default function Issues({
                         </button>
                         <div className="min-w-0">
                           <Link
-                            href={`/issue/${issue.id}`}
+                            href={`/issue/${repoInfo?.owner.login}/${repoInfo?.name}/${issue.number}`}
                             className="hover:text-accent transition-colors font-medium text-sm block truncate"
                           >
                             {issue.title}
@@ -667,7 +667,7 @@ export default function Issues({
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/issue/${issue.id}`}
+                        href={`/issue/${repoInfo?.owner.login}/${repoInfo?.name}/${issue.number}`}
                         className="font-medium hover:text-accent transition-colors block truncate"
                       >
                         {issue.title}

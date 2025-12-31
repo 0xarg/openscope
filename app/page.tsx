@@ -320,7 +320,7 @@ export default function LandingPage() {
                 className="hidden rounded-full px-4 sm:flex sm:px-5"
                 asChild
               >
-                <Link href="/demo/dashboard">Demo</Link>
+                <Link href="/auth">Get Started</Link>
               </Button>
               <Button
                 variant="ghost"
@@ -414,9 +414,9 @@ export default function LandingPage() {
                     className="glow-accent h-12 rounded-full px-8 text-base group"
                     asChild
                   >
-                    <Link href="/auth">
+                    <Link href="/demo/dashboard">
                       <Terminal className="h-4 w-4 mr-2" />
-                      Start Contributing
+                      Try demo
                       <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>

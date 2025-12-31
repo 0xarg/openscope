@@ -21,6 +21,34 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  events: {
+    async createUser({ user }) {
+      if (!user.id) return;
+
+      const userId = Number(user.id);
+
+      await prisma.$transaction([
+        prisma.userPlan.create({
+          data: {
+            userId,
+            plan: "FREE",
+            isActive: true,
+          },
+        }),
+        prisma.userUsage.create({
+          data: {
+            userId,
+            trackedIssuesCount: 0,
+            trackedReposCount: 0,
+            aiRequestsToday: 0,
+            aiRequestsMonth: 0,
+            aiTokensToday: 0,
+            aiTokensMonth: 0,
+          },
+        }),
+      ]);
+    },
+  },
 
   session: {
     strategy: "jwt",

@@ -32,6 +32,8 @@ import { IssueWithAI } from "@/types/ai/issueAI";
 import axiosInstance from "@/lib/axios";
 import { UserIssueDb } from "@/types/database/user/UserIssue";
 import { AppLayout } from "@/components/devlens/app-sidebar";
+import axios from "axios";
+import { DisabledOverlay } from "@/components/devlens/DisabledOverlay";
 
 const statusOptions = [
   {
@@ -61,6 +63,8 @@ export default function IssueDetail({
 }) {
   const [issue, setIssue] = useState<IssueWithAI>();
   const [status, setStatus] = useState<string>("not-started");
+  const [blur, setBlur] = useState<boolean>(false);
+  const [blurReason, setBlurReason] = useState<string>("Unknown reason");
   const [userIssue, setUserIssue] = useState<UserIssueDb>();
   const [notes, setNotes] = useState("");
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
@@ -93,13 +97,25 @@ export default function IssueDetail({
       const data = res.data;
       setIssue({ ...issue, ai: { ...issue.ai, ...data.ai } });
       setIsAILoading(false);
-    } catch (error) {
-      console.log(error);
-      setIsAILoading(true);
-      toast({
-        title: "Unable to fetch AI insights",
-        description: "There was a error fetching AI insights",
-      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.status;
+        switch (status) {
+          case 429:
+            setBlur(true);
+            setBlurReason("AI usage limit reached.");
+            console.log("blur krdiya bhai");
+            break;
+          case 403:
+            setBlur(true);
+            setBlurReason("Contact support team");
+            break;
+          default:
+            setBlur(true);
+            setBlurReason("Unkown");
+            break;
+        }
+      }
     }
   }, []);
 
@@ -498,7 +514,7 @@ export default function IssueDetail({
               style={{ animationDelay: "0.1s" }}
             >
               <div className="p-5">
-                {isLoading || !issue?.ai ? (
+                {isLoading ? (
                   <>
                     <div className="flex items-center gap-3 mb-4">
                       <Skeleton className="h-10 w-10 rounded-xl" />
@@ -536,6 +552,44 @@ export default function IssueDetail({
                       <Skeleton className="h-4 w-3/4 mt-1" />
                     </div>
                   </>
+                ) : blur || !issue?.ai ? (
+                  <DisabledOverlay reason={blurReason}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Skeleton className="h-10 w-10 rounded-xl" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-28" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="p-3 rounded-lg bg-background/50">
+                        <Skeleton className="h-3 w-16 mb-2" />
+                        <Skeleton className="h-5 w-12" />
+                      </div>
+                      <div className="p-3 rounded-lg bg-background/50">
+                        <Skeleton className="h-3 w-16 mb-2" />
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <Skeleton className="h-3 w-24 mb-2" />
+                      <div className="flex flex-wrap gap-1.5">
+                        <Skeleton className="h-6 w-20 rounded-md" />
+                        <Skeleton className="h-6 w-16 rounded-md" />
+                        <Skeleton className="h-6 w-24 rounded-md" />
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <Skeleton className="h-3 w-16 mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-4/5 mt-1" />
+                    </div>
+                    <div className="mb-4">
+                      <Skeleton className="h-3 w-20 mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4 mt-1" />
+                    </div>
+                  </DisabledOverlay>
                 ) : (
                   <>
                     <div className="flex items-center justify-between mb-4">
@@ -622,57 +676,113 @@ export default function IssueDetail({
               </div>
 
               {/* Approach - collapsible */}
-              <div className="border-t border-accent/20">
-                <button
-                  onClick={() => setShowApproach(!showApproach)}
-                  className="flex items-center justify-between w-full px-5 py-3 text-sm font-medium hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-accent" />
-                    Suggested Approach
-                  </div>
-                  {showApproach ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </button>
-                {showApproach && issue?.ai && (
-                  <div className="px-5 pb-5 animate-fade-in">
-                    {issue.ai.approach && (
-                      <div className="space-y-2">
-                        {issue.ai.approach.map((step, i) => (
-                          <p
-                            key={i}
-                            className="text-sm text-muted-foreground pl-4 border-l-2 border-accent/30"
-                          >
-                            {step}
+              {blur ? (
+                <DisabledOverlay reason="">
+                  <div className="border-t border-accent/20">
+                    <button
+                      onClick={() => setShowApproach(!showApproach)}
+                      className="flex items-center justify-between w-full px-5 py-3 text-sm font-medium hover:bg-accent/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-accent" />
+                        Suggested Approach
+                      </div>
+                      {showApproach ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                    {showApproach && issue?.ai && (
+                      <div className="px-5 pb-5 animate-fade-in">
+                        {issue.ai.approach && (
+                          <div className="space-y-2">
+                            {issue.ai.approach.map((step, i) => (
+                              <p
+                                key={i}
+                                className="text-sm text-muted-foreground pl-4 border-l-2 border-accent/30"
+                              >
+                                {step}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Files to explore */}
+                        <div className="mt-4 pt-4 border-t border-accent/20">
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Files to explore
                           </p>
-                        ))}
+                          {issue.ai.filestoExplore && (
+                            <div className="space-y-1">
+                              {issue.ai.filestoExplore.map((file) => (
+                                <code
+                                  key={file}
+                                  className="block text-xs font-mono text-accent bg-accent/10 px-2 py-1 rounded"
+                                >
+                                  {file}
+                                </code>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
-
-                    {/* Files to explore */}
-                    <div className="mt-4 pt-4 border-t border-accent/20">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Files to explore
-                      </p>
-                      {issue.ai.filestoExplore && (
-                        <div className="space-y-1">
-                          {issue.ai.filestoExplore.map((file) => (
-                            <code
-                              key={file}
-                              className="block text-xs font-mono text-accent bg-accent/10 px-2 py-1 rounded"
+                  </div>
+                </DisabledOverlay>
+              ) : (
+                <div className="border-t border-accent/20">
+                  <button
+                    onClick={() => setShowApproach(!showApproach)}
+                    className="flex items-center justify-between w-full px-5 py-3 text-sm font-medium hover:bg-accent/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-accent" />
+                      Suggested Approach
+                    </div>
+                    {showApproach ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </button>
+                  {showApproach && issue?.ai && (
+                    <div className="px-5 pb-5 animate-fade-in">
+                      {issue.ai.approach && (
+                        <div className="space-y-2">
+                          {issue.ai.approach.map((step, i) => (
+                            <p
+                              key={i}
+                              className="text-sm text-muted-foreground pl-4 border-l-2 border-accent/30"
                             >
-                              {file}
-                            </code>
+                              {step}
+                            </p>
                           ))}
                         </div>
                       )}
+
+                      {/* Files to explore */}
+                      <div className="mt-4 pt-4 border-t border-accent/20">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Files to explore
+                        </p>
+                        {issue.ai.filestoExplore && (
+                          <div className="space-y-1">
+                            {issue.ai.filestoExplore.map((file) => (
+                              <code
+                                key={file}
+                                className="block text-xs font-mono text-accent bg-accent/10 px-2 py-1 rounded"
+                              >
+                                {file}
+                              </code>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Quick actions */}

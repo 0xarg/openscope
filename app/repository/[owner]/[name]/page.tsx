@@ -33,6 +33,7 @@ import { fetchGithubRepo } from "@/lib/utils/fetchGithubRepo";
 import axiosInstance from "@/lib/axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppLayout } from "@/components/devlens/app-sidebar";
+import { DisabledOverlay } from "@/components/devlens/DisabledOverlay";
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",
@@ -82,6 +83,9 @@ export default function RepositoryDetail({
   const [repo, setRepo] = useState<RepositoryWithAI>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAILoading, setIsAILoading] = useState<boolean>(false);
+  const [blur, setBlur] = useState<boolean>(false);
+  const [blurReason, setBlurReason] = useState<string>("Unknown reason");
+
   const [isTracked, setIsTracked] = useState<boolean>(false);
 
   const { toast } = useToast();
@@ -109,12 +113,24 @@ export default function RepositoryDetail({
       const data = res.data;
       setRepo({ ...repo, ai: { ...repo.ai, ...data.ai } });
       setIsAILoading(false);
-    } catch (error) {
-      setIsAILoading(true);
-      toast({
-        title: "Unable to fetch AI insights",
-        description: "There was a error fetching AI insights",
-      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const status = error.status;
+        switch (status) {
+          case 429:
+            setBlur(true);
+            setBlurReason("AI usage limit reached.");
+            break;
+          case 403:
+            setBlur(true);
+            setBlurReason("Contact support team");
+            break;
+          default:
+            setBlur(true);
+            setBlurReason("Unkown");
+            break;
+        }
+      }
     }
   }, []);
   const handleTrackRepo = useCallback(
@@ -608,6 +624,54 @@ export default function RepositoryDetail({
                       </div>
                     </div>
                   </>
+                ) : blur ? (
+                  <DisabledOverlay reason={blurReason}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Skeleton className="h-10 w-10 rounded-xl" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {[...Array(4)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-lg bg-background/50"
+                        >
+                          <Skeleton className="h-3 w-24 mb-2" />
+                          <Skeleton className="h-5 w-16" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mb-4">
+                      <Skeleton className="h-3 w-20 mb-2" />
+                      <div className="flex flex-wrap gap-1.5">
+                        <Skeleton className="h-6 w-20 rounded-md" />
+                        <Skeleton className="h-6 w-16 rounded-md" />
+                        <Skeleton className="h-6 w-14 rounded-md" />
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <Skeleton className="h-3 w-16 mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4 mt-1" />
+                    </div>
+                    <div className="mb-4">
+                      <Skeleton className="h-3 w-16 mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6 mt-1" />
+                      <Skeleton className="h-4 w-2/3 mt-1" />
+                    </div>
+                    <div>
+                      <Skeleton className="h-3 w-32 mb-2" />
+                      <div className="flex flex-wrap gap-1.5">
+                        <Skeleton className="h-5 w-24 rounded-full" />
+                        <Skeleton className="h-5 w-32 rounded-full" />
+                        <Skeleton className="h-5 w-20 rounded-full" />
+                      </div>
+                    </div>
+                  </DisabledOverlay>
                 ) : (
                   <>
                     <div className="flex items-center justify-between mb-4">

@@ -22,6 +22,48 @@ model User {
   sessions        Session[]
   issues          UserIssue[]
   repos           UserRepository[]
+  plan            UserPlan?
+  usage           UserUsage?
+}
+
+model UserUsage {
+  id     Int @id @default(autoincrement())
+  userId Int @unique
+
+  // ---- Tracking limits ----
+  trackedIssuesCount Int @default(0)
+  trackedReposCount  Int @default(0)
+
+  // ---- AI usage ----
+  aiRequestsToday Int @default(0)
+  aiRequestsMonth Int @default(0)
+
+  // ---- Token-based control (future) ----
+  aiTokensToday Int @default(0)
+  aiTokensMonth Int @default(0)
+
+  // ---- Reset timestamps ----
+  lastDailyReset   DateTime @default(now())
+  lastMonthlyReset DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum PlanType {
+  FREE
+  PRO
+  PREMIUM
+}
+
+model UserPlan {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @unique
+  plan      PlanType  @default(FREE)
+  startedAt DateTime  @default(now())
+  endsAt    DateTime?
+  isActive  Boolean   @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
