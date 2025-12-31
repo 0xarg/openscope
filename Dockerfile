@@ -21,7 +21,12 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# 1. Generate Prisma Client (with dummy env var)
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
+
+# 2. Build the Next.js app (THIS WAS MISSING)
+RUN pnpm build
 
 # -----------------------------
 # Production runner
