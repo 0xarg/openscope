@@ -87,7 +87,7 @@ const testimonials = [
     handle: "@sarahdev",
     role: "Full Stack Developer",
     avatar: "SC",
-    text: "DevLens helped me find my first open source contribution. The AI difficulty ratings are spot on!",
+    text: "OpenScope helped me find my first open source contribution. The AI difficulty ratings are spot on!",
     date: "Dec 15, 2024",
   },
   {
@@ -103,7 +103,7 @@ const testimonials = [
     handle: "@priyacode",
     role: "CS Student",
     avatar: "PS",
-    text: "Got my GSoC acceptance thanks to DevLens. The skill matching is incredibly helpful.",
+    text: "Got my GSoC acceptance thanks to OpenScope. The skill matching is incredibly helpful.",
     date: "Dec 20, 2024",
   },
   {
@@ -111,7 +111,7 @@ const testimonials = [
     handle: "@alexr_dev",
     role: "Open Source Maintainer",
     avatar: "AR",
-    text: "As a maintainer, I love how DevLens helps new contributors find appropriate issues.",
+    text: "As a maintainer, I love how OpenScope helps new contributors find appropriate issues.",
     date: "Dec 22, 2024",
   },
   {
@@ -127,7 +127,7 @@ const testimonials = [
     handle: "@emmawilson",
     role: "DevRel Engineer",
     avatar: "EW",
-    text: "Been recommending DevLens to every developer I meet. It's a game changer.",
+    text: "Been recommending OpenScope to every developer I meet. It's a game changer.",
     date: "Dec 25, 2024",
   },
 ];
@@ -279,8 +279,8 @@ export default function LandingPage() {
           <nav className="floating-navbar flex items-center justify-between px-4 py-3 sm:px-6">
             <div className="flex items-center gap-4 sm:gap-8">
               <Link href="/" className="group flex items-center gap-1">
-                <span className="brand-text">Dev</span>
-                <span className="brand-text brand-text-accent">Lens</span>
+                <span className="brand-text">Open</span>
+                <span className="brand-text brand-text-accent">Scope</span>
               </Link>
               <div className="hidden items-center gap-6 md:flex">
                 <a
@@ -402,7 +402,7 @@ export default function LandingPage() {
 
                 {/* Subtitle */}
                 <p className="text-muted-foreground mx-auto mb-8 max-w-lg text-lg lg:mx-0">
-                  Stop scrolling through endless issues. DevLens uses AI to
+                  Stop scrolling through endless issues. OpenScope uses AI to
                   analyze repositories and match you with contributions that fit
                   your expertise.
                 </p>
@@ -482,7 +482,7 @@ export default function LandingPage() {
                     <div className="flex flex-1 justify-center">
                       <div className="bg-background/50 text-muted-foreground flex items-center gap-2 rounded-md px-4 py-1 font-mono text-xs">
                         <Terminal className="h-3 w-3" />
-                        devlens scan --match
+                        OpenScope scan --match
                       </div>
                     </div>
                   </div>
@@ -605,7 +605,7 @@ export default function LandingPage() {
               <span className="gradient-text">everything</span> you need
             </h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-sm sm:text-base">
-              From automatic issue analysis to collaborative tracking, DevLens
+              From automatic issue analysis to collaborative tracking, OpenScope
               has your contribution journey totally covered.
             </p>
           </div>
@@ -643,7 +643,7 @@ export default function LandingPage() {
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base">
               {" "}
-              Developers around the world are using DevLens to level up their
+              Developers around the world are using OpenScope to level up their
               open source journey.
             </p>
           </div>
@@ -753,7 +753,7 @@ export default function LandingPage() {
         <section className="relative px-4 py-16 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-muted-foreground mb-4 text-base sm:text-lg">
-              Join hundreds of developers already using DevLens
+              Join hundreds of developers already using OpenScope
             </p>
             <Button
               size="lg"
@@ -775,9 +775,9 @@ export default function LandingPage() {
               © 2026 All Rights Reserved
             </p>
             <div className="order-1 flex items-center gap-1 md:order-2">
-              <span className="text-sm font-semibold tracking-tight">DEV</span>
+              <span className="text-sm font-semibold tracking-tight">OPEN</span>
               <span className="text-accent dark:drop-shadow-[0_0_8px_hsl(346,84%,60%)] text-sm font-semibold tracking-tight">
-                LENS
+                SCOPE
               </span>
             </div>
             <div className="order-3 flex items-center gap-4">

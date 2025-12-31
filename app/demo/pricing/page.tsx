@@ -694,7 +694,7 @@ export default function Pricing() {
             <span className="brand-text text-sm">Dev</span>
             <span className="brand-text brand-text-accent text-sm">Lens</span>
           </div>
-          <p>© 2026 DevLens. All rights reserved.</p>
+          <p>© 2026 OpenScope. All rights reserved.</p>
         </div>
       </footer>
     </div>

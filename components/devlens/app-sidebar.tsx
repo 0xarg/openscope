@@ -265,7 +265,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
                 <span>Sign Out</span>
               </button>
               <p className="px-3 pt-2 text-[10px] text-muted-foreground">
-                devlens v0.1.0
+                OpenScope v0.1.0
               </p>
             </div>
           </motion.aside>
@@ -430,7 +430,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
           </button>
           {!collapsed && (
             <p className="px-3 pt-2 text-[10px] text-muted-foreground whitespace-nowrap">
-              devlens v0.1.0
+              OpenScope v0.1.0
             </p>
           )}
         </div>

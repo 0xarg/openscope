@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "DevLens - Smart Open Source Contribution",
+  title: "OpenScope - Smart Open Source Contribution",
   description:
     "Accelerate your open source contributions with AI-powered insights.",
   generator: "v0.app",

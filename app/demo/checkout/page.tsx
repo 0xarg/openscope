@@ -98,7 +98,7 @@ export default function Checkout() {
       setIsProcessing(false);
       toast({
         title: "Payment Successful!",
-        description: `Welcome to DevLens ${plan.name}! Your subscription is now active.`,
+        description: `Welcome to OpenScope ${plan.name}! Your subscription is now active.`,
       });
     }, 2000);
   };
@@ -370,7 +370,7 @@ export default function Checkout() {
                       <plan.icon className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <h3 className="font-bold">DevLens {plan.name}</h3>
+                      <h3 className="font-bold">OpenScope {plan.name}</h3>
                       <p className="text-xs text-muted-foreground capitalize">
                         {billingCycle} billing
                       </p>

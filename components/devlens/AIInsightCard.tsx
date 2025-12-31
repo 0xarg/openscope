@@ -26,7 +26,9 @@ export function AIInsightCard({ insight }: AIInsightCardProps) {
           </div>
           <div>
             <CardTitle className="text-base">AI Analysis</CardTitle>
-            <p className="text-xs text-muted-foreground">Powered by DevLens AI</p>
+            <p className="text-xs text-muted-foreground">
+              Powered by OpenScope AI
+            </p>
           </div>
         </div>
       </CardHeader>
@@ -45,11 +47,15 @@ export function AIInsightCard({ insight }: AIInsightCardProps) {
         {/* Difficulty & Skills */}
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <span className="text-xs text-muted-foreground block mb-1.5">Difficulty</span>
+            <span className="text-xs text-muted-foreground block mb-1.5">
+              Difficulty
+            </span>
             <DifficultyBadge level={insight.difficulty} />
           </div>
           <div className="flex-1">
-            <span className="text-xs text-muted-foreground block mb-1.5">Skills Required</span>
+            <span className="text-xs text-muted-foreground block mb-1.5">
+              Skills Required
+            </span>
             <SkillTags skills={insight.skills} max={5} />
           </div>
         </div>

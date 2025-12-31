@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { useTheme } from "next-themes"
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   FolderGit2,
@@ -19,38 +19,38 @@ import {
   LogOut,
   ChevronDown,
   CreditCard,
-} from "lucide-react"
-import { useState } from "react"
+} from "lucide-react";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useToast } from "@/hooks/use-toast"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Repos", href: "/repositories", icon: FolderGit2 },
   { name: "Tracked", href: "/tracked", icon: Bookmark },
-]
+];
 
 export function AppHeader() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { toast } = useToast()
+  const pathname = usePathname();
+  const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleLogout = () => {
     toast({
       title: "Signed out",
       description: "You have been successfully signed out.",
-    })
-    router.push("/")
-  }
+    });
+    router.push("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full glass-navbar">
@@ -60,13 +60,15 @@ export function AppHeader() {
           <div className="logo-icon transition-transform group-hover:scale-105">
             <Code2 className="h-4 w-4 text-white" />
           </div>
-          <span className="font-semibold text-base hidden sm:block">DevLens</span>
+          <span className="font-semibold text-base hidden sm:block">
+            OpenScope
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href;
             return (
               <Link key={item.name} href={item.href}>
                 <Button
@@ -74,14 +76,16 @@ export function AppHeader() {
                   size="sm"
                   className={cn(
                     "h-8 px-3 text-sm gap-1.5 font-medium",
-                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
+                    isActive
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <item.icon className="h-3.5 w-3.5" />
                   {item.name}
                 </Button>
               </Link>
-            )
+            );
           })}
         </nav>
 
@@ -92,18 +96,29 @@ export function AppHeader() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
           >
-            {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </Button>
 
           {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="hidden md:flex items-center gap-2 h-8 px-2">
+              <Button
+                variant="ghost"
+                className="hidden md:flex items-center gap-2 h-8 px-2"
+              >
                 <Avatar className="h-6 w-6">
                   <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">AD</AvatarFallback>
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                    AD
+                  </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium">alexdev</span>
                 <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -111,19 +126,28 @@ export function AppHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <User className="h-4 w-4" />
                   Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <Settings className="h-4 w-4" />
                   Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/pricing" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  href="/pricing"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <CreditCard className="h-4 w-4" />
                   Upgrade
                 </Link>
@@ -146,7 +170,11 @@ export function AppHeader() {
             className="md:hidden h-8 w-8"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {mobileMenuOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -156,25 +184,38 @@ export function AppHeader() {
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container py-3 space-y-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = pathname === item.href;
               return (
-                <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant={isActive ? "secondary" : "ghost"} className="w-full justify-start gap-2 h-9">
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    className="w-full justify-start gap-2 h-9"
+                  >
                     <item.icon className="h-4 w-4" />
                     {item.name}
                   </Button>
                 </Link>
-              )
+              );
             })}
             <div className="pt-2 border-t border-border mt-2 space-y-1">
               <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-2 h-9">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 h-9"
+                >
                   <User className="h-4 w-4" />
                   Profile
                 </Button>
               </Link>
               <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start gap-2 h-9">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 h-9"
+                >
                   <Settings className="h-4 w-4" />
                   Settings
                 </Button>
@@ -192,5 +233,5 @@ export function AppHeader() {
         </div>
       )}
     </header>
-  )
+  );
 }
