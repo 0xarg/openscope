@@ -6,6 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const userId = session?.user.id;
   const searchParams = await req.nextUrl.searchParams;
   const githubId = String(searchParams.get("githubId"));
@@ -45,6 +48,9 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const userId = session?.user.id;
   const data = await req.json();
   const issue: UserIssueDb = data.payload;

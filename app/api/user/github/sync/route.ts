@@ -6,6 +6,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const githubUsername = session?.user.githubUsername;
   const userId = parseInt(session?.user.id);
 

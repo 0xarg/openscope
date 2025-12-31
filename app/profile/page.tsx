@@ -28,7 +28,7 @@ import {
   User,
   RefreshCw,
 } from "lucide-react";
-import axios from "axios";
+import axiosInstance from "@/lib/axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserDb } from "@/types/database/user/user";
 import { formatDate } from "date-fns";
@@ -103,7 +103,7 @@ export default function Profile() {
 
   const fetchUser = useCallback(async () => {
     try {
-      const res = await axios.get("/api/user");
+      const res = await axiosInstance.get("/api/user");
       const fetchedUser: UserDb = res.data.user;
       console.log(fetchedUser);
       setUser(fetchedUser);
@@ -147,7 +147,7 @@ export default function Profile() {
 
     setUser(updatedUser);
     try {
-      const res = await axios.post("/api/user", {
+      const res = await axiosInstance.post("/api/user", {
         updatedUser,
       });
       toast({

@@ -23,7 +23,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/app/components/Navbar";
 import { useCallback, useEffect, useState } from "react";
 import Showdown from "showdown";
-import axios from "axios";
+import axiosInstance from "@/lib/axios";
 import { Issue } from "@/types/issues";
 import {
   InputGroup,
@@ -77,7 +77,7 @@ export default function IssueDetail({
 
       const issueNumber = paramData.issueNumber;
       try {
-        const res = await axios.get(
+        const res = await axiosInstance.get(
           `https://api.github.com/repos/${owner}/${decodeURIComponent(
             repo
           )}/issues/${issueNumber}`
@@ -93,7 +93,7 @@ export default function IssueDetail({
           htmlBody: markdownHTML,
         });
 
-        await axios
+        await axiosInstance
           .post("/api/ai/issue/stats", {
             issue: res.data,
             repo,
@@ -152,7 +152,7 @@ export default function IssueDetail({
                     variant={"outline"}
                     onClick={async () => {
                       setTrackLoader(true);
-                      await axios
+                      await axiosInstance
                         .post(`/api/ai/issue/track?id=${aiStats?.id}`, {
                           issue,
                         })

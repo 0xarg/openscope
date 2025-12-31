@@ -22,8 +22,9 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-import axios from "axios";
 import { UserIssues } from "@/types/database/github/userIssues";
+import axiosInstance from "@/lib/axios";
+import axios from "axios";
 
 const statusTabs = [
   { key: "all", label: "All", icon: Bookmark },
@@ -41,7 +42,7 @@ export default function TrackedIssues() {
 
   const fetchTrackedIssues = useCallback(async () => {
     try {
-      const res = await axios.get("/api/issues/tracked");
+      const res = await axiosInstance.get("/api/issues/tracked");
       setTrackedIssues(res.data.issues);
       console.log(res.data);
     } catch (error: unknown) {

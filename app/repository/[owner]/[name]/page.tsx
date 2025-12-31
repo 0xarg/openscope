@@ -32,6 +32,7 @@ import axios from "axios";
 import Link from "next/link";
 import { Skeleton } from "@/app/components/ui/skeleton";
 import { fetchGithubRepo } from "@/lib/utils/fetchGithubRepo";
+import axiosInstance from "@/lib/axios";
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",
@@ -87,7 +88,7 @@ export default function RepositoryDetail({
 
   const fetchTrackedReposIds = useCallback(async () => {
     try {
-      const res = await axios.get("/api/repository/tracked/ids");
+      const res = await axiosInstance.get("/api/repository/tracked/ids");
       const trackedIds: string[] = res.data.trackedIds;
       if (repo) {
         if (trackedIds.includes(repo?.githubId.toString())) {
@@ -102,7 +103,7 @@ export default function RepositoryDetail({
   const fetchAIData = useCallback(async (repo: RepositoryWithAI) => {
     try {
       console.log(repo);
-      const res = await axios.post("/api/repository/ai/advance", {
+      const res = await axiosInstance.post("/api/repository/ai/advance", {
         repo,
       });
       const data = res.data;
@@ -132,7 +133,7 @@ export default function RepositoryDetail({
           title: "Adding repository to tracking list",
           description: "Adding may to take few seconds",
         });
-        const res = await axios.post("/api/repository", {
+        const res = await axiosInstance.post("/api/repository", {
           githubUrl,
         });
 
@@ -178,7 +179,7 @@ export default function RepositoryDetail({
     setIsLoading(true);
     try {
       const { owner, name } = await params;
-      const res = await axios.get(
+      const res = await axiosInstance.get(
         `/api/repository/info?owner=${owner}&name=${name}`
       );
       const fetchedRepo: RepositoryWithAI = res.data.repo;

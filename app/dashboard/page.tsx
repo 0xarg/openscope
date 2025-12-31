@@ -23,10 +23,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-import axios from "axios";
 import { GitHubRepository } from "@/types/github/repository";
 import { formatDigits } from "@/lib/utils/formatDigits";
 import { RepositoryWithAI } from "@/types/ai/repositoryAI";
+import axiosInstance from "@/lib/axios";
+import axios from "axios";
 
 const languages = ["All", "TypeScript", "JavaScript", "Python", "Rust", "Go"];
 const popularities = ["All", "Legendary", "Famous", "Popular", "Rising"];
@@ -65,7 +66,7 @@ export default function Dashboard() {
 
   const fetchTrendingRepos = useCallback(async () => {
     try {
-      const res = await axios.get("/api/githubTrending");
+      const res = await axiosInstance.get("/api/githubTrending");
       setAllRepos(res.data.repos);
       console.log(res.data);
     } catch (error) {
@@ -84,7 +85,7 @@ export default function Dashboard() {
     setIsAILoading(true);
 
     try {
-      const res = await axios.post("/api/repository/ai/basic", {
+      const res = await axiosInstance.post("/api/repository/ai/basic", {
         repo,
       });
       const data = res.data;
@@ -113,7 +114,7 @@ export default function Dashboard() {
 
   const fetchTrackedReposIds = useCallback(async () => {
     try {
-      const res = await axios.get("/api/repository/tracked/ids");
+      const res = await axiosInstance.get("/api/repository/tracked/ids");
       setTrackedIds(res.data.trackedIds);
     } catch (error) {
       console.log(error);
@@ -150,7 +151,7 @@ export default function Dashboard() {
           title: "Adding repository to tracking list",
           description: "Adding may to take few seconds",
         });
-        const res = await axios.post("/api/repository", {
+        const res = await axiosInstance.post("/api/repository", {
           githubUrl,
         });
 
@@ -197,7 +198,7 @@ export default function Dashboard() {
 
   const userGithubSync = useCallback(async () => {
     try {
-      await axios.get("/api/user/github/sync");
+      await axiosInstance.get("/api/user/github/sync");
     } catch (error) {
       console.log(error);
     }

@@ -10,6 +10,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const userId = parseInt(session?.user.id);
   const data = await req.json();
   const repo: RepositoryWithAI = data.repo;

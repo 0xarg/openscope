@@ -26,7 +26,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   pages: {
-    signIn: "/login",
+    signIn: "/auth",
   },
 
   callbacks: {
@@ -37,14 +37,31 @@ export const authOptions: NextAuthOptions = {
       if (profile && "login" in profile) {
         token.githubUsername = String(profile.login);
       }
+      const userExists = await prisma.user.findUnique({
+        where: {
+          id: token.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+      if (!userExists) {
+        delete token.id;
+        delete token.githubUsername;
+      }
       return token;
     },
 
     async session({ session, token }) {
+      if (!token?.id) {
+        return session;
+      }
+
       if (session.user && token.id) {
         session.user.id = token.id; // expose id in session
         session.user.githubUsername = token.githubUsername as string;
       }
+
       return session;
     },
   },

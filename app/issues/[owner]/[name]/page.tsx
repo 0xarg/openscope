@@ -26,7 +26,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
-import axios from "axios";
+import axiosInstance from "@/lib/axios";
 import { GitHubRepository } from "@/types/github/repository";
 import { formatDigits } from "@/lib/utils/formatDigits";
 import { GitHubIssue } from "@/types/github/issues";
@@ -51,7 +51,7 @@ export default function Issues({
   const { toast } = useToast();
 
   const trackedIssue = useCallback(async () => {
-    const res = await axios.get("/api/issues/tracked/ids");
+    const res = await axiosInstance.get("/api/issues/tracked/ids");
     if (res.data.trackedIds) {
       setTrackedIds(res.data.trackedIds);
     }
@@ -80,7 +80,7 @@ export default function Issues({
           title: "Tracking issue",
           description: "Adding to track list may take few seconds",
         });
-        const res = await axios.post("/api/issue/track", {
+        const res = await axiosInstance.post("/api/issue/track", {
           issue: issue,
           owner: repoInfo?.owner.login,
           name: repoInfo?.name,
@@ -104,7 +104,7 @@ export default function Issues({
   const fetchRepositoryIssues = useCallback(
     async (owner: string, name: string) => {
       try {
-        const res = await axios.post(`/api/issues/`, {
+        const res = await axiosInstance.post(`/api/issues/`, {
           name: name,
           owner: owner,
         });
@@ -120,7 +120,7 @@ export default function Issues({
   const fetchGithubRepoInfo = useCallback(
     async (owner: string, name: string) => {
       try {
-        const res = await axios.get(
+        const res = await axiosInstance.get(
           `/api/repository/info?owner=${owner}&name=${name}`
         );
         setRepoInfo(res.data.repo);
@@ -142,7 +142,7 @@ export default function Issues({
     setIsAILoading(true);
 
     try {
-      const res = await axios.post("/api/issue/ai/basic", {
+      const res = await axiosInstance.post("/api/issue/ai/basic", {
         issue,
       });
       const data = res.data;

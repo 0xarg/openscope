@@ -1,11 +1,15 @@
+import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 export { default } from "next-auth/middleware";
 
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const isPublicPath = path === "/login" || path === "/";
+  const isPublicPath = path === "/auth" || path === "/";
 
-  const token = req.cookies.get("next-auth.session-token")?.value || "";
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
   if (isPublicPath && token) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
@@ -16,5 +20,16 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/dashboard", "/", "/issues"],
+  matcher: [
+    "/auth",
+    "/dashboard",
+    "/",
+    "/issues/:path*",
+    "/issue/:path*",
+    "/profile/:path*",
+    "/repositories/:path*",
+    "/repository/:path*",
+    "/settings/:path*",
+    "/tracked/:path*",
+  ],
 };

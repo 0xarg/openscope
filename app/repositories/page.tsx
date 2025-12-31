@@ -30,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import { RepositoryDB } from "@/types/database/github/repository";
 import { filterTrendingRepo } from "@/lib/utils/filterTrendingRepo";
@@ -61,7 +62,7 @@ export default function Repositories() {
 
   const fetchRepositories = useCallback(async () => {
     try {
-      const res = await axios.get("api/repository");
+      const res = await axiosInstance.get("api/repository");
       if (res.status !== 200) {
         throw new Error("Error fetching repositories");
       }
@@ -108,7 +109,7 @@ export default function Repositories() {
         return prev.filter((repo) => repo.id !== id);
       });
       try {
-        await axios.delete(`/api/repository/?id=${id}`);
+        await axiosInstance.delete(`/api/repository/?id=${id}`);
         toast({
           title: "Untracked repository",
           description: "You are not tracking this repository anymore",
@@ -128,7 +129,7 @@ export default function Repositories() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("/api/repository", {
+      const res = await axiosInstance.post("/api/repository", {
         githubUrl: url,
       });
       setIsLoading(false);

@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const userId = parseInt(session?.user.id);
 
   try {
@@ -43,6 +46,9 @@ export async function POST(req: NextRequest) {
   const searchParams = await req.nextUrl.searchParams;
   const issueId = parseInt(searchParams.get("id")!);
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
   const userId = parseInt(session?.user.id);
 
   try {

@@ -42,6 +42,7 @@ import { UserDb } from "@/types/database/user/user";
 import axios, { AxiosError } from "axios";
 import { DisabledOverlay } from "../components/devlens/DisabledOverlay";
 import { signIn, signOut } from "next-auth/react";
+import axiosInstance from "@/lib/axios";
 
 const aiModels = [
   { value: "gpt-4", label: "GPT-4 Turbo", description: "Most capable" },
@@ -96,7 +97,7 @@ export default function Settings() {
 
   const handleDelete = useCallback(async () => {
     try {
-      const res = await axios.delete("/api/user");
+      const res = await axiosInstance.delete("/api/user");
       await signOut({
         callbackUrl: "/",
       });
@@ -104,9 +105,6 @@ export default function Settings() {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         switch (status) {
-          case 401:
-            signOut({ callbackUrl: "/" });
-            break;
           case 500:
             toast({
               title: "Something went wrong",
@@ -127,16 +125,13 @@ export default function Settings() {
   const loadPageData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get("/api/user");
+      const res = await axiosInstance.get("/api/user");
       const fetchedUser = res.data.user;
       setUser(fetchedUser);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         switch (status) {
-          case 401:
-            signOut({ callbackUrl: "/" });
-            break;
           case 500:
             toast({
               title: "Something went wrong",

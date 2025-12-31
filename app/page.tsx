@@ -31,8 +31,6 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/page-transition";
 import { signIn } from "next-auth/react";
-import axios from "axios";
-import { toast } from "@/hooks/use-toast";
 
 const features = [
   {

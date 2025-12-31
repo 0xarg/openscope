@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { IssueWithAI } from "@/types/ai/issueAI";
-import axios from "axios";
+import axiosInstance from "@/lib/axios";
 import { UserIssueDb } from "@/types/database/user/UserIssue";
 
 const statusOptions = [
@@ -77,7 +77,7 @@ export default function IssueDetail({
 
   const fetchTrackedIssueIds = useCallback(async () => {
     try {
-      const res = await axios.get("/api/issues/tracked/ids");
+      const res = await axiosInstance.get("/api/issues/tracked/ids");
       setTrackedIds(res.data.trackedIds);
       return res.data.trackedIds;
     } catch (error) {
@@ -87,7 +87,7 @@ export default function IssueDetail({
   const fetchAIData = useCallback(async (issue: IssueWithAI) => {
     try {
       // console.log(issue);
-      const res = await axios.post("/api/issue/ai/advance", {
+      const res = await axiosInstance.post("/api/issue/ai/advance", {
         issue,
       });
       const data = res.data;
@@ -105,7 +105,9 @@ export default function IssueDetail({
 
   const getUserIssue = useCallback(async (githubId: string) => {
     try {
-      const res = await axios.get(`/api/user/issue?githubId=${githubId}`);
+      const res = await axiosInstance.get(
+        `/api/user/issue?githubId=${githubId}`
+      );
       const fetchedUserIssue = res.data.userIssue;
       setUserIssue(fetchedUserIssue);
       setStatus(fetchedUserIssue.status);
@@ -123,7 +125,7 @@ export default function IssueDetail({
     try {
       const { owner, name, githubNumber } = await params;
       setRepoInfo({ owner, name });
-      const res = await axios.get(
+      const res = await axiosInstance.get(
         `/api/issue/info?owner=${owner}&name=${name}&githubNumber=${githubNumber}`
       );
       const fetchedIssue: IssueWithAI = res.data.issue;
@@ -175,7 +177,7 @@ export default function IssueDetail({
       }
 
       try {
-        const res = await axios.put("/api/user/issue", {
+        const res = await axiosInstance.put("/api/user/issue", {
           payload,
         });
         toast({
@@ -210,7 +212,7 @@ export default function IssueDetail({
           title: "Tracking Issue",
           description: "Tracking issue may take few seconds",
         });
-        const res = await axios.post("/api/issue/track", {
+        const res = await axiosInstance.post("/api/issue/track", {
           issue,
           owner: repoInfo.owner,
           name: repoInfo.name,
