@@ -46,9 +46,9 @@ const feedbackNav = [
 ];
 
 const socialNav = [
-  { name: "Twitter", href: "#", icon: Twitter },
-  { name: "GitHub", href: "#", icon: Github },
-  { name: "Email", href: "#", icon: Mail },
+  { name: "Twitter", href: "https://x.com/0x_anurag", icon: Twitter },
+  { name: "GitHub", href: "https://github.com/0xarg/openscope", icon: Github },
+  { name: "Email", href: "anuragpoonia.ap@gmail.com", icon: Mail },
 ];
 
 interface AppSidebarProps {

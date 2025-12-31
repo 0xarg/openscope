@@ -578,7 +578,7 @@ export default function RepositoryDetail({ params }: PageProps) {
             {/* AI Insights Card */}
             <div className="rounded-xl ai-surface overflow-hidden animate-slide-in-right">
               <div className="p-5">
-                {isAILoading || !repo?.ai ? (
+                {isAILoading ? (
                   <>
                     <div className="flex items-center gap-3 mb-4">
                       <Skeleton className="h-10 w-10 rounded-xl" />
@@ -626,7 +626,7 @@ export default function RepositoryDetail({ params }: PageProps) {
                       </div>
                     </div>
                   </>
-                ) : blur ? (
+                ) : blur || !repo?.ai ? (
                   <DisabledOverlay reason={blurReason}>
                     <div className="flex items-center gap-3 mb-4">
                       <Skeleton className="h-10 w-10 rounded-xl" />
