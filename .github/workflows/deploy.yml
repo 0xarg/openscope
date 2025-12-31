@@ -20,10 +20,17 @@ jobs:
       - name: Enable pnpm
         run: corepack enable
 
-      - name: Install deps
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build Next.js (HEAVY STEP — done in CI)
+      # 🔑 Prisma needs DATABASE_URL even for generate
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+        env:
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
+
+      # 🔥 Heavy step — CI only
+      - name: Build Next.js
         run: pnpm build
 
       - name: Build Docker image
