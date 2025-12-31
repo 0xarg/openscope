@@ -100,6 +100,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
     <Link
       href={item.href}
       onClick={() => setMobileOpen(false)}
+      target="blank"
       className={cn(
         "flex items-center gap-3 rounded-lg text-sm transition-all duration-200",
         showText ? "px-3 py-2.5" : "p-2.5 justify-center",
@@ -298,8 +299,8 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
                   href="/dashboard"
                   className="flex items-center gap-1 whitespace-nowrap"
                 >
-                  <span className="brand-text">Dev</span>
-                  <span className="brand-text brand-text-accent">Lens</span>
+                  <span className="brand-text">Open</span>
+                  <span className="brand-text brand-text-accent">Scope</span>
                 </Link>
               </motion.div>
             )}
