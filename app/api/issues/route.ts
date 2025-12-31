@@ -8,9 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   try {
     const repos = await prisma.repository.findMany();
-    type Repo = (typeof repos)[number];
 
-    const issueRequests = repos.map(async (repo: Repo) => {
+    const issueRequests = repos.map(async (repo) => {
       try {
         const res = await axios.get(
           `https://api.github.com/repos/${repo.owner}/${repo.name}/issues`,

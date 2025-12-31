@@ -25,9 +25,7 @@ export async function GET() {
       },
     });
 
-    const trackedIds = userIssues.map((ui: (typeof userIssues)[number]) =>
-      ui.githubId.toString()
-    );
+    const trackedIds = userIssues.map((ui) => ui.githubId.toString());
     return NextResponse.json(
       {
         trackedIds,

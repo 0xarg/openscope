@@ -21,9 +21,7 @@ export async function GET() {
       },
     });
 
-    const trackedIds = userRepos.map(
-      (ur: (typeof userRepos)[number]) => ur.repo.githubId
-    );
+    const trackedIds = userRepos.map((ur) => ur.repo.githubId);
 
     return NextResponse.json(
       {

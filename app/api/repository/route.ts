@@ -26,7 +26,7 @@ export async function GET() {
     });
     return NextResponse.json(
       {
-        repos: repos.map((r: (typeof repos)[number]) => r.repo),
+        repos: repos.map((r) => r.repo),
       },
       { status: 200 }
     );
