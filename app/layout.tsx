@@ -9,7 +9,9 @@ export const metadata: Metadata = {
   title: "OpenScope - Smart Open Source Contribution",
   description:
     "Accelerate your open source contributions with AI-powered insights.",
-  generator: "v0.app",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export const viewport: Viewport = {

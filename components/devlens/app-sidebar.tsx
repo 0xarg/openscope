@@ -118,8 +118,8 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-background/95 backdrop-blur-lg border-b border-border flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-1">
-          <span className="brand-text">Dev</span>
-          <span className="brand-text brand-text-accent">Lens</span>
+          <span className="brand-text">Open</span>
+          <span className="brand-text brand-text-accent">Scope</span>
         </Link>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
