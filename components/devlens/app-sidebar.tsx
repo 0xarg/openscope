@@ -2,8 +2,8 @@
 
 import type React from "react";
 
-import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import {
@@ -27,6 +27,7 @@ import {
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { signOut } from "next-auth/react";
 
 const generalNav = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -62,10 +63,12 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
   const { toast } = useToast();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
+  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
@@ -82,10 +85,10 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
       title: "Signed out",
       description: "You have been successfully signed out.",
     });
-    router.push("/");
+    signOut();
   };
 
-  const NavLink = ({
+  const NavLinkComponent = ({
     item,
     active,
     showText = true,
@@ -112,6 +115,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
 
   return (
     <>
+      {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-background/95 backdrop-blur-lg border-b border-border flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-1">
           <span className="brand-text">Dev</span>
@@ -156,6 +160,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
         </button>
       </header>
 
+      {/* Mobile Overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -169,6 +174,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
         )}
       </AnimatePresence>
 
+      {/* Mobile Sidebar */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.aside
@@ -178,6 +184,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
+            {/* Navigation */}
             <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
               <div>
                 <p className="px-3 mb-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
@@ -185,7 +192,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
                 </p>
                 <div className="space-y-1">
                   {generalNav.map((item) => (
-                    <NavLink
+                    <NavLinkComponent
                       key={item.name}
                       item={item}
                       active={pathname === item.href}
@@ -199,7 +206,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
                 </p>
                 <div className="space-y-1">
                   {accountNav.map((item) => (
-                    <NavLink
+                    <NavLinkComponent
                       key={item.name}
                       item={item}
                       active={pathname === item.href}
@@ -213,7 +220,11 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
                 </p>
                 <div className="space-y-1">
                   {feedbackNav.map((item) => (
-                    <NavLink key={item.name} item={item} active={false} />
+                    <NavLinkComponent
+                      key={item.name}
+                      item={item}
+                      active={false}
+                    />
                   ))}
                 </div>
               </div>
@@ -223,7 +234,11 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
                 </p>
                 <div className="space-y-1">
                   {socialNav.map((item) => (
-                    <NavLink key={item.name} item={item} active={false} />
+                    <NavLinkComponent
+                      key={item.name}
+                      item={item}
+                      active={false}
+                    />
                   ))}
                 </div>
               </div>
@@ -257,12 +272,14 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
         )}
       </AnimatePresence>
 
+      {/* Desktop Sidebar */}
       <aside
         className={cn(
           "hidden lg:flex fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border flex-col transition-all duration-300 overflow-hidden",
           collapsed ? "w-16" : "w-56"
         )}
       >
+        {/* Header */}
         <div
           className={cn(
             "h-14 flex items-center border-b border-sidebar-border shrink-0 overflow-hidden",
@@ -299,6 +316,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
           </button>
         </div>
 
+        {/* Navigation */}
         <nav
           className={cn(
             "flex-1 overflow-y-auto py-4 space-y-6 overflow-x-hidden",
@@ -313,7 +331,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
             )}
             <div className="space-y-1">
               {generalNav.map((item) => (
-                <NavLink
+                <NavLinkComponent
                   key={item.name}
                   item={item}
                   active={pathname === item.href}
@@ -330,7 +348,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
             )}
             <div className="space-y-1">
               {accountNav.map((item) => (
-                <NavLink
+                <NavLinkComponent
                   key={item.name}
                   item={item}
                   active={pathname === item.href}
@@ -347,7 +365,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
             )}
             <div className="space-y-1">
               {feedbackNav.map((item) => (
-                <NavLink
+                <NavLinkComponent
                   key={item.name}
                   item={item}
                   active={false}
@@ -364,7 +382,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
             )}
             <div className="space-y-1">
               {socialNav.map((item) => (
-                <NavLink
+                <NavLinkComponent
                   key={item.name}
                   item={item}
                   active={false}
@@ -375,6 +393,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
           </div>
         </nav>
 
+        {/* Footer */}
         <div
           className={cn(
             "p-3 border-t border-sidebar-border space-y-1 shrink-0 overflow-hidden",
@@ -420,6 +439,7 @@ export function AppSidebar({ collapsed = false, onCollapse }: AppSidebarProps) {
   );
 }
 
+// Layout wrapper component
 interface AppLayoutProps {
   children: React.ReactNode;
 }

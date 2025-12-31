@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +33,7 @@ import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import { RepositoryDB } from "@/types/database/github/repository";
 import { filterTrendingRepo } from "@/lib/utils/filterTrendingRepo";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",

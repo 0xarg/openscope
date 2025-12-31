@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,9 +29,10 @@ import { useToast } from "@/hooks/use-toast";
 import { RepositoryWithAI } from "@/types/ai/repositoryAI";
 import axios from "axios";
 import Link from "next/link";
-import { Skeleton } from "@/app/components/ui/skeleton";
 import { fetchGithubRepo } from "@/lib/utils/fetchGithubRepo";
 import axiosInstance from "@/lib/axios";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const languageColors: Record<string, string> = {
   TypeScript: "bg-blue-500",

@@ -1,13 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DisabledOverlay } from "../components/devlens/DisabledOverlay";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
@@ -33,6 +31,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserDb } from "@/types/database/user/user";
 import { formatDate } from "date-fns";
 import Link from "next/link";
+import { DisabledOverlay } from "@/components/devlens/DisabledOverlay";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const userData = {
   name: "Alex Developer",

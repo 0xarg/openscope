@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { AppLayout } from "@/components/app-layout";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,7 @@ import { formatDigits } from "@/lib/utils/formatDigits";
 import { GitHubIssue } from "@/types/github/issues";
 import { fetchGithubRepo } from "@/lib/utils/fetchGithubRepo";
 import { IssueWithAI } from "@/types/ai/issueAI";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const languages = ["All", "TypeScript", "JavaScript", "Python", "Rust", "Go"];
 const popularities = ["All", "Legendary", "Famous", "Popular", "Rising"];

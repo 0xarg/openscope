@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 
 export function PageLoader() {
   return (
-    <div className="flex min-h-[50vh] items-center justify-center">
+    <div className="flex items-center justify-center min-h-[50vh]">
       <motion.div
         className="flex items-center gap-1"
         initial={{ opacity: 0 }}
@@ -12,17 +12,17 @@ export function PageLoader() {
         transition={{ duration: 0.2 }}
       >
         <motion.div
-          className="bg-accent h-2 w-2 rounded-full"
+          className="h-2 w-2 rounded-full bg-accent"
           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, delay: 0 }}
         />
         <motion.div
-          className="bg-accent h-2 w-2 rounded-full"
+          className="h-2 w-2 rounded-full bg-accent"
           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, delay: 0.15 }}
         />
         <motion.div
-          className="bg-accent h-2 w-2 rounded-full"
+          className="h-2 w-2 rounded-full bg-accent"
           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, delay: 0.3 }}
         />
@@ -33,7 +33,7 @@ export function PageLoader() {
 
 export function FullPageLoader() {
   return (
-    <div className="bg-background fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
       <motion.div
         className="flex flex-col items-center gap-4"
         initial={{ opacity: 0, scale: 0.95 }}
@@ -46,17 +46,17 @@ export function FullPageLoader() {
         </div>
         <div className="flex items-center gap-1.5">
           <motion.div
-            className="bg-accent h-2 w-2 rounded-full"
+            className="h-2 w-2 rounded-full bg-accent"
             animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, delay: 0 }}
           />
           <motion.div
-            className="bg-accent h-2 w-2 rounded-full"
+            className="h-2 w-2 rounded-full bg-accent"
             animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, delay: 0.15 }}
           />
           <motion.div
-            className="bg-accent h-2 w-2 rounded-full"
+            className="h-2 w-2 rounded-full bg-accent"
             animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, delay: 0.3 }}
           />

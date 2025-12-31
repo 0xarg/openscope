@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +31,7 @@ import Link from "next/link";
 import { IssueWithAI } from "@/types/ai/issueAI";
 import axiosInstance from "@/lib/axios";
 import { UserIssueDb } from "@/types/database/user/UserIssue";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const statusOptions = [
   {

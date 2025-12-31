@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { AppLayout } from "@/components/app-layout";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ import { formatDigits } from "@/lib/utils/formatDigits";
 import { RepositoryWithAI } from "@/types/ai/repositoryAI";
 import axiosInstance from "@/lib/axios";
 import axios from "axios";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const languages = ["All", "TypeScript", "JavaScript", "Python", "Rust", "Go"];
 const popularities = ["All", "Legendary", "Famous", "Popular", "Rising"];

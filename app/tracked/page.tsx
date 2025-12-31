@@ -1,13 +1,8 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { AppLayout } from "@/components/devlens/AppSidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  formatDistanceToNow,
-  format,
-  formatDistanceToNowStrict,
-} from "date-fns";
+
 import { useToast } from "@/hooks/use-toast";
 import {
   Bookmark,
@@ -25,6 +20,7 @@ import Link from "next/link";
 import { UserIssues } from "@/types/database/github/userIssues";
 import axiosInstance from "@/lib/axios";
 import axios from "axios";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const statusTabs = [
   { key: "all", label: "All", icon: Bookmark },

@@ -1,50 +1,55 @@
-"use client"
-
-import { Badge } from "@/components/ui/badge"
-import { DifficultyBadge } from "./DifficultyBadge"
-import { Bookmark, BookmarkCheck, ExternalLink, Circle, Clock, CheckCircle2 } from "lucide-react"
-import Link from "next/link"
+import { Badge } from "@/components/ui/badge";
+import { DifficultyBadge } from "./DifficultyBadge";
+import { 
+  Bookmark, 
+  BookmarkCheck,
+  ExternalLink,
+  Circle,
+  Clock,
+  CheckCircle2
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 export interface Issue {
-  id: string
-  title: string
-  repo: string
-  repoOwner: string
-  labels: string[]
-  difficulty: "easy" | "medium" | "hard"
-  skills: string[]
-  isTracked?: boolean
-  status?: "not-started" | "in-progress" | "completed"
-  aiSummary?: string
+  id: string;
+  title: string;
+  repo: string;
+  repoOwner: string;
+  labels: string[];
+  difficulty: "easy" | "medium" | "hard";
+  skills: string[];
+  isTracked?: boolean;
+  status?: "not-started" | "in-progress" | "completed";
+  aiSummary?: string;
 }
 
 interface IssueRowProps {
-  issue: Issue
-  onTrack?: (id: string) => void
-  showStatus?: boolean
+  issue: Issue;
+  onTrack?: (id: string) => void;
+  showStatus?: boolean;
 }
 
 const statusConfig = {
   "not-started": { icon: Circle, color: "text-muted-foreground", label: "Planned" },
   "in-progress": { icon: Clock, color: "text-warning", label: "In Progress" },
-  completed: { icon: CheckCircle2, color: "text-success", label: "Done" },
-}
+  "completed": { icon: CheckCircle2, color: "text-success", label: "Done" },
+};
 
 export function IssueRow({ issue, onTrack, showStatus }: IssueRowProps) {
-  const StatusIcon = issue.status ? statusConfig[issue.status].icon : null
-  const statusColor = issue.status ? statusConfig[issue.status].color : ""
+  const StatusIcon = issue.status ? statusConfig[issue.status].icon : null;
+  const statusColor = issue.status ? statusConfig[issue.status].color : "";
 
   return (
-    <Link
-      href={`/issue/${issue.id}`}
+    <Link 
+      to={`/issue/${issue.id}`}
       className="group flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 border-b border-border/50 last:border-b-0 transition-colors cursor-pointer"
     >
       {/* Track button */}
       <button
         onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onTrack?.(issue.id)
+          e.preventDefault();
+          e.stopPropagation();
+          onTrack?.(issue.id);
         }}
         className="shrink-0 p-1 hover:bg-muted rounded transition-colors"
       >
@@ -106,5 +111,5 @@ export function IssueRow({ issue, onTrack, showStatus }: IssueRowProps) {
         <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
       </a>
     </Link>
-  )
+  );
 }

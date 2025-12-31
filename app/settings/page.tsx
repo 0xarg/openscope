@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { AppLayout } from "@/components/devlens/AppSidebar";
 import {
   Card,
   CardContent,
@@ -40,9 +39,10 @@ import {
 } from "lucide-react";
 import { UserDb } from "@/types/database/user/user";
 import axios, { AxiosError } from "axios";
-import { DisabledOverlay } from "../components/devlens/DisabledOverlay";
 import { signIn, signOut } from "next-auth/react";
 import axiosInstance from "@/lib/axios";
+import { DisabledOverlay } from "@/components/devlens/DisabledOverlay";
+import { AppLayout } from "@/components/devlens/app-sidebar";
 
 const aiModels = [
   { value: "gpt-4", label: "GPT-4 Turbo", description: "Most capable" },

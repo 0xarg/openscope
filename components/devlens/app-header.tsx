@@ -1,10 +1,10 @@
 "use client"
 
-import { Link } from "next/link"
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useTheme } from "@/hooks/useTheme"
+import { useTheme } from "next-themes"
 import {
   LayoutDashboard,
   FolderGit2,
