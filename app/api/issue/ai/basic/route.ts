@@ -5,7 +5,8 @@ import {
   shouldResetDaily,
   shouldResetMonthly,
 } from "@/lib/billings/resetUsage";
-import { openai } from "@/lib/openai";
+// import { openai } from "@/lib/openai";
+import { getOpenAI } from "@/lib/openai";
 import { safeParseAI } from "@/lib/utils/parseAIRes";
 import { IssueWithAI } from "@/types/ai/issueAI";
 import { PlanType } from "@/types/database/user/UserPlan";
@@ -116,6 +117,7 @@ Produce JSON with exactly these keys:
         TOTAL_ISSUE_COMMENTS:
         ${issue.commentsCount}
         `;
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: "openai/gpt-4o-mini",
       messages: [

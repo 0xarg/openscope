@@ -5,7 +5,7 @@ import {
   shouldResetDaily,
   shouldResetMonthly,
 } from "@/lib/billings/resetUsage";
-import { openai } from "@/lib/openai";
+import { getOpenAI } from "@/lib/openai";
 import { safeParseAI } from "@/lib/utils/parseAIRes";
 import { IssueWithAI } from "@/types/ai/issueAI";
 import { RepositoryWithAI } from "@/types/ai/repositoryAI";
@@ -200,7 +200,7 @@ ${issue.commentsCount}
 
 Return JSON only.
 `;
-
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: "openai/gpt-4o-mini",
       messages: [
