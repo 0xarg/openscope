@@ -39,6 +39,6 @@ jobs:
             docker run -d \
               --name openscope \
               -p 3000:3000 \
-              --env-file .env.production.local \
+              --env-file /root/openscope/.env.production.local \
               --restart unless-stopped \
               ghcr.io/${{ github.repository }}/openscope:latest
