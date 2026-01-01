@@ -138,9 +138,9 @@ const pricingPlans = [
     price: "$0",
     description: "Perfect for getting started",
     features: [
-      "5 tracked issues",
+      "15 tracked issues",
       "Basic AI insights",
-      "3 repositories",
+      "20 repositories",
       "Community support",
     ],
     cta: "Get Started",
@@ -148,7 +148,7 @@ const pricingPlans = [
   },
   {
     name: "Pro",
-    price: "$12",
+    price: "$2",
     period: "/month",
     description: "For serious contributors",
     features: [
@@ -164,7 +164,7 @@ const pricingPlans = [
   },
   {
     name: "Team",
-    price: "$39",
+    price: "$3",
     period: "/month",
     description: "For teams & organizations",
     features: [

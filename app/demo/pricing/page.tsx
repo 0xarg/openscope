@@ -40,9 +40,9 @@ const plans = [
     yearlyPrice: 0,
     icon: Sparkles,
     features: [
-      "5 tracked issues",
+      "15 tracked issues",
       "Basic AI insights",
-      "3 repositories",
+      "20 repositories",
       "Community support",
       "GitHub integration",
     ],
@@ -54,8 +54,8 @@ const plans = [
   {
     name: "Pro",
     description: "For serious contributors",
-    monthlyPrice: 12,
-    yearlyPrice: 99,
+    monthlyPrice: 2,
+    yearlyPrice: 18,
     icon: Zap,
     popular: true,
     features: [
@@ -75,8 +75,8 @@ const plans = [
   {
     name: "Team",
     description: "For teams & organizations",
-    monthlyPrice: 39,
-    yearlyPrice: 349,
+    monthlyPrice: 3,
+    yearlyPrice: 26,
     icon: Building2,
     features: [
       "Everything in Pro",
@@ -124,14 +124,14 @@ const faqs = [
 const comparisonFeatures = [
   {
     name: "Tracked Issues",
-    free: "5",
+    free: "15",
     pro: "Unlimited",
     team: "Unlimited",
     icon: CreditCard,
   },
   {
     name: "Repositories",
-    free: "3",
+    free: "20",
     pro: "Unlimited",
     team: "Unlimited",
     icon: Github,
