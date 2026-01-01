@@ -8,11 +8,11 @@ export const PLAN_LIMITS: Record<
   }
 > = {
   FREE: {
-    aiRequestsPerDay: 3,
-    aiRequestsPerMonth: 20,
+    aiRequestsPerDay: 10,
+    aiRequestsPerMonth: 50,
   },
   PRO: {
-    aiRequestsPerDay: 3,
+    aiRequestsPerDay: 50,
     aiRequestsPerMonth: 1000,
   },
   PREMIUM: {
