@@ -194,8 +194,8 @@ export default function Pricing() {
         <nav className="floating-navbar px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-8">
             <Link href="/" className="flex items-center gap-1 group">
-              <span className="brand-text">Dev</span>
-              <span className="brand-text brand-text-accent">Lens</span>
+              <span className="brand-text">Open</span>
+              <span className="brand-text brand-text-accent">Scope</span>
             </Link>
             <div className="hidden md:flex items-center gap-6">
               <Link

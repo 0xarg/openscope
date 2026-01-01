@@ -66,18 +66,18 @@ export async function POST(req: NextRequest) {
       });
       usage.aiRequestsMonth = 0;
     }
-    if (
-      usage.aiRequestsToday >= limits.aiRequestsPerDay ||
-      usage.aiRequestsMonth >= limits.aiRequestsPerMonth
-    ) {
-      return NextResponse.json(
-        {
-          code: "AI_LIMIT_EXCEEDED",
-          message: "AI usage limit reached. Upgrade your plan.",
-        },
-        { status: 429 }
-      );
-    }
+    // if (
+    //   usage.aiRequestsToday >= limits.aiRequestsPerDay ||
+    //   usage.aiRequestsMonth >= limits.aiRequestsPerMonth
+    // ) {
+    //   return NextResponse.json(
+    //     {
+    //       code: "AI_LIMIT_EXCEEDED",
+    //       message: "AI usage limit reached. Upgrade your plan.",
+    //     },
+    //     { status: 429 }
+    //   );
+    // }
     const prompt = `
 You are an expert open-source mentor helping a developer decide whether he/she should try to contribute to this repository or not .
 
@@ -137,13 +137,13 @@ Produce JSON with exactly these keys:
     const response = completion.choices[0].message;
     // console.log(completion);
     const finaldata = safeParseAI(response.content ?? "");
-    await prisma.userUsage.update({
-      where: { userId },
-      data: {
-        aiRequestsToday: { increment: 1 },
-        aiRequestsMonth: { increment: 1 },
-      },
-    });
+    // await prisma.userUsage.update({
+    //   where: { userId },
+    //   data: {
+    //     aiRequestsToday: { increment: 1 },
+    //     aiRequestsMonth: { increment: 1 },
+    //   },
+    // });
     return NextResponse.json(
       {
         ai: {
