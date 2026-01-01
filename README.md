@@ -180,7 +180,11 @@ A short walkthrough demo covers:
 - AI‑generated insights
 - Issue tracking workflow
 
-(The video is linked from the website / portfolio.)
+
+
+https://github.com/user-attachments/assets/cc26d403-a6e5-4419-aa60-31d3a2bec569
+
+
 
 ---
 
