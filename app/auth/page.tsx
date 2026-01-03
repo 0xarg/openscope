@@ -27,6 +27,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import { signIn } from "next-auth/react";
 
 const oauthProviders = [
   {
@@ -41,12 +42,12 @@ const oauthProviders = [
   //   color: "text-white",
   //   bgColor: "bg-[#4285F4] hover:bg-[#357ae8]",
   // },
-  {
-    name: "Email",
-    icon: Mail,
-    color: "text-accent",
-    bgColor: "bg-accent/10 hover:bg-accent/20 border border-accent/30",
-  },
+  // {
+  //   name: "Email",
+  //   icon: Mail,
+  //   color: "text-accent",
+  //   bgColor: "bg-accent/10 hover:bg-accent/20 border border-accent/30",
+  // },
 ];
 
 const benefits = [
@@ -65,11 +66,7 @@ export default function AuthPage() {
   const { theme, setTheme } = useTheme();
 
   const handleOAuthClick = (provider: string) => {
-    if (provider === "Email") {
-      setShowEmailForm(true);
-    } else {
-      console.log(`[v0] ${provider} authentication clicked`);
-    }
+    signIn("github", { callbackUrl: "/dashboard" });
   };
 
   return (
